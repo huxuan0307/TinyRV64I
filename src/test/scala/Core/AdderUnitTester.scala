@@ -27,7 +27,7 @@ case class AdderUnitTester(adder: Adder) extends PeekPokeTester(adder) {
   }
 }
 
-object TestMain extends App{
+object TestAdder extends App{
   iotesters.Driver.execute(args, () => new Adder) {
     adder => AdderUnitTester(adder)
   }
