@@ -1,6 +1,9 @@
 package Core
+import Core.Bundles.AluIOs
+
+
 import chisel3._
-import chisel3.util.{MuxLookup, Cat}
+import chisel3.util.{Cat, MuxLookup}
 
 // {1'b0, funct7[5], funct3[2:0]}
 private object OP {
@@ -17,12 +20,7 @@ private object OP {
 }
 
 class ALU extends Module {
-  val io = IO(new Bundle() {
-    val op: UInt = Input(UInt(5.W))
-    val a: UInt = Input(UInt(32.W))
-    val b: UInt = Input(UInt(32.W))
-    val out: UInt = Output(UInt(32.W))
-  })
+  val io: AluIOs = IO(new AluIOs)
 
   val OpList = List(
     (OP.ADD, io.a + io.b),
