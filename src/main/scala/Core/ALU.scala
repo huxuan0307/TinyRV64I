@@ -1,5 +1,5 @@
 package Core
-import Core.Bundles.AluIOs
+import Core.Bundles.AluIO
 
 
 import chisel3._
@@ -20,7 +20,7 @@ private object OP {
 }
 
 class ALU extends Module {
-  val io: AluIOs = IO(new AluIOs)
+  val io: AluIO = IO(new AluIO)
 
   val OpList = List(
     (OP.ADD, io.a + io.b),
