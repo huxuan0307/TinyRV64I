@@ -3,24 +3,34 @@ package Core
 import Core.Bundles.RegfileIO
 import chisel3._
 
-class Regfile extends Module {
-  val io: RegfileIO = IO(new RegfileIO)
-  val regfile: Mem[UInt] = Mem(32, UInt(32.W))
-  //  def read(addr: UInt): UInt = Mux(addr === 0.U, 0.U, regfile(addr))
-  //  def write(addr: UInt, data: UInt) = {
-  //    when(addr =/= 0.U) {
-  //      regfile(addr) := data
-  //    }
-  //    ()
-  //  }
-  when(io.w.ena === 1.U(1.W)) {
-    when(io.w.addr =/= 0.U(1.W)){
-      regfile(io.w.addr) := io.w.data
+trait HasRegfileParameter {
+  val resetVector = 0
+  val regWidth = 32
+  val regNum = 32
+}
+
+class RegfileImpl extends HasRegfileParameter {
+  val regfile: Mem[UInt] = Mem(regNum, UInt(regWidth.W))
+
+  def write(addr: UInt, data: UInt): Unit = {
+    when(addr =/= 0.U) {
+      regfile(addr) := data
     }
-    io.r1.data := 0.U
-    io.r2.data := 0.U
-  } otherwise {
-    io.r1.data := Mux(io.r1.ena.asBool, regfile(io.r1.addr), 0.U)
-    io.r2.data := Mux(io.r2.ena.asBool, regfile(io.r2.addr), 0.U)
+    ()
   }
+
+  def read(addr: UInt): UInt = {
+    regfile(addr)
+  }
+}
+
+class Regfile extends Module with HasRegfileParameter {
+  val io: RegfileIO = IO(new RegfileIO)
+  val regfile = new RegfileImpl
+
+  when(io.w.ena === 1.U(1.W)) {
+    regfile.write(io.w.addr, io.w.data)
+  }
+  io.r1.data := Mux(io.r1.ena.asBool, regfile.read(io.r1.addr), 0.U)
+  io.r2.data := Mux(io.r2.ena.asBool, regfile.read(io.r2.addr), 0.U)
 }
