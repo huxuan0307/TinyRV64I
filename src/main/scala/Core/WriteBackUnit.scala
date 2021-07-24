@@ -12,7 +12,7 @@ class WriteBackUnitIO extends Bundle with CoreConfig {
   val out = new RegfileWritePortIO
 }
 
-class WBU extends Module {
+class WriteBackUnit extends Module {
   val io = new WriteBackUnitIO
   io.out <> io.in.w
 }

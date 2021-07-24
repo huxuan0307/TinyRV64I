@@ -26,7 +26,7 @@ trait DecoderCtrlPathIO extends Bundle with CtrlPathIO
 
 trait DecoderDataPathIO extends Bundle with DataPathIO with DecodeConst with CoreConfig
 
-class DecoderOutPort extends DecoderCtrlPathIO with DecoderDataPathIO {
+class InstDecodeUnitOutPort extends DecoderCtrlPathIO with DecoderDataPathIO {
   val pc : UInt = Output(UInt(INST_WIDTH))
 }
 

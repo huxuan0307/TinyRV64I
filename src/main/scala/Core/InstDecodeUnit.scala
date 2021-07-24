@@ -4,13 +4,13 @@ import chisel3._
 import chisel3.util._
 import Core.Decode.{InstJ, _}
 
-class IDU_IO extends Bundle {
+class InstDecodeUnitIO extends Bundle {
   val in: PcInstPathIO = Flipped(new PcInstPathIO)
-  val out = new DecoderOutPort
+  val out = new InstDecodeUnitOutPort
 }
 
-class IDU extends Module with HasRs1Type with HasRs2Type with CoreConfig with HasInstType {
-  val io: IDU_IO = IO(new IDU_IO)
+class InstDecodeUnit extends Module with HasRs1Type with HasRs2Type with CoreConfig with HasInstType {
+  val io: InstDecodeUnitIO = IO(new InstDecodeUnitIO)
   private val inst = io.in.inst
   private val rs1Reg = inst(19, 15)
   private val rs2Reg = inst(24, 20)

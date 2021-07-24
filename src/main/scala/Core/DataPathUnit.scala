@@ -5,7 +5,7 @@ import chisel3._
 import chisel3.util._
 
 class DataPathUnitIO extends Bundle {
-  val from_idu : DecoderOutPort = Flipped(new DecoderOutPort)
+  val from_idu : InstDecodeUnitOutPort = Flipped(new InstDecodeUnitOutPort)
   val from_wbu = new RegfileWritePortIO
   val to_exu : ExecuteInPort = Flipped(new ExecuteInPort)
 }

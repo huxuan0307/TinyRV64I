@@ -18,9 +18,10 @@ class ExecuteOutPort extends Bundle with CoreConfig {
 class EXU_IO extends Bundle{
   val in = new ExecuteInPort
   val out = new ExecuteOutPort
+  val dmem : MemIO = Flipped(new MemIO)
 }
 
-class EXU extends Module {
+class ExecuteUnit extends Module {
   val io: EXU_IO = IO(new EXU_IO)
 
   val alu = new ALU

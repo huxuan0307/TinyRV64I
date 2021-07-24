@@ -9,6 +9,10 @@ trait CoreConfig {
   protected def INST_WIDTH: Width = 32.W
   protected def ADDR_WIDTH: Width = 32.W
   protected def DATA_WIDTH: Width = XLEN.W
+  protected def MEM_DATA_WIDTH : Width = 32.W
+  protected def IMEM_SIZE = 256
+  protected def DMEM_SIZE = 256
+
   protected def REG_NUM: Int = 32
   protected def REG_ADDR_WIDTH: Width = log2Up(REG_NUM).W
 }
