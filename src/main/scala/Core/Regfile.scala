@@ -31,6 +31,6 @@ class Regfile extends Module with HasRegfileParameter {
   when(io.w.ena === 1.U(1.W)) {
     regfile.write(io.w.addr, io.w.data)
   }
-  io.r1.data := Mux(io.r1.ena.asBool, regfile.read(io.r1.addr), 0.U)
-  io.r2.data := Mux(io.r2.ena.asBool, regfile.read(io.r2.addr), 0.U)
+  io.r1.data := regfile.read(io.r1.addr)
+  io.r2.data := regfile.read(io.r2.addr)
 }

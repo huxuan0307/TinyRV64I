@@ -15,7 +15,6 @@ case class RegfileUnitTester(regfile: Regfile) extends PeekPokeTester(regfile) {
 
   for (i <- 0 to 31) {
     poke(regfile.io.r1.addr, i)
-    poke(regfile.io.r1.ena, 1)
     val dut = peek(regfile.io.r1.data)
     if (dut != i + 0xffff && i != 0) {
       println(f"right = ${i + 0xffff}%x, wrong = $dut%x")

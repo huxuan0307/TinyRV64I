@@ -1,12 +1,12 @@
 package Core.Bundles
 
+import Core.{CoreConfig, HasFullOpType}
 import chisel3._
 
-class ALU_InputPortIO extends Bundle {
-  val opType: UInt = Input(UInt(5.W))
-  val op: UInt = Input(UInt(5.W))
-  val a: UInt = Input(UInt(32.W))
-  val b: UInt = Input(UInt(32.W))
+class ALU_InputPortIO extends Bundle with CoreConfig with HasFullOpType{
+  val op: UInt = Input(UInt(FullOpTypeWidth))
+  val a: UInt = Input(UInt(DATA_WIDTH))
+  val b: UInt = Input(UInt(DATA_WIDTH))
 }
 
 class ALU_OutputPortIO extends Bundle {

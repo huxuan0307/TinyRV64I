@@ -17,12 +17,13 @@ private object OP {
   def AND: UInt = "b00111".U(5.W)
   def SUB: UInt = ADD | "b01000".U(5.W)
   def SRA: UInt = SRL | "b01000".U(5.W)
+  def LUI: UInt = "b01111".U(5.W)
 }
 
 class ALU extends Module {
   val io: ALU_IO = IO(new ALU_IO)
 
-  val OpList = List(
+  private val OpList = List(
     (OP.ADD, io.in.a + io.in.b),
     (OP.SLL, io.in.a << io.in.b(4, 0)), // just b[4:0]
     (OP.SLT, Cat(0.U(63.W), io.in.a.asSInt < io.in.b.asSInt)),
@@ -32,7 +33,8 @@ class ALU extends Module {
     (OP.OR, io.in.a | io.in.b),
     (OP.AND, io.in.a & io.in.b),
     (OP.SUB, io.in.a - io.in.b),
-    (OP.SRA, (io.in.a.asSInt >> io.in.b(4,0)).asUInt)
+    (OP.SRA, (io.in.a.asSInt >> io.in.b(4,0)).asUInt),
+    (OP.LUI, io.in.b << 12.U)
   )
 
   io.out.data := MuxLookup(io.in.op, 0.U, OpList)

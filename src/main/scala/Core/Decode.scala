@@ -7,11 +7,18 @@ import ISA.RV32I.InstU._
 import ISA.RV32I.InstB._
 import ISA.RV32I.InstR._
 import ISA.RV32I.InstS._
+import chisel3.util.BitPat
 
 trait Inst
 
-object Decode extends HasFuncType with HasInstType {
-
+object Decode
+  extends HasFuncType
+    with HasInstType
+    with HasRs1Type
+    with HasRs2Type
+    with BasicDefine
+{
+  private val NoneOp : UInt = "b0000".U
   object AluOp {
     val ADD : UInt  = "b0000".U
     val SLL : UInt  = "b0001".U
@@ -48,47 +55,67 @@ object Decode extends HasFuncType with HasInstType {
     val JALR :UInt = "b1001".U
   }
 
-  //                          Inst | Func   | Op        |
-  val DecodeDefault: (UInt, UInt, UInt) = Tuple3( InstN, FuncALU, AluOp.ADD )
-
-  val DecodeTable = Map(
-    LUI           ->  Tuple3( InstU, FuncALU, AluOp.LUI ),
-    AUIPC         ->  Tuple3( InstU, FuncALU, AluOp.ADD ),
-    JAL           ->  Tuple3( InstJ, FuncBRU, BruOp.JAL ),
-    JALR          ->  Tuple3( InstI, FuncBRU, BruOp.JALR),
-    BEQ           ->  Tuple3( InstB, FuncBRU, BruOp.BEQ ),
-    BNE           ->  Tuple3( InstB, FuncBRU, BruOp.BNE ),
-    BLT           ->  Tuple3( InstB, FuncBRU, BruOp.BLT ),
-    BGE           ->  Tuple3( InstB, FuncBRU, BruOp.BGE ),
-    BLTU          ->  Tuple3( InstB, FuncBRU, BruOp.BLTU),
-    BGEU          ->  Tuple3( InstB, FuncBRU, BruOp.BGEU),
-    LB            ->  Tuple3( InstI, FuncLSU, LsuOp.LB  ),
-    LH            ->  Tuple3( InstI, FuncLSU, LsuOp.LH  ),
-    LW            ->  Tuple3( InstI, FuncLSU, LsuOp.LW  ),
-    LBU           ->  Tuple3( InstI, FuncLSU, LsuOp.LBU ),
-    LHU           ->  Tuple3( InstI, FuncLSU, LsuOp.LHU ),
-    SB            ->  Tuple3( InstS, FuncLSU, LsuOp.SB  ),
-    SH            ->  Tuple3( InstS, FuncLSU, LsuOp.SH  ),
-    SW            ->  Tuple3( InstS, FuncLSU, LsuOp.SW  ),
-    ADDI          ->  Tuple3( InstI, FuncALU, AluOp.ADD ),
-    SLTI          ->  Tuple3( InstI, FuncALU, AluOp.SLT ),
-    SLTIU         ->  Tuple3( InstI, FuncALU, AluOp.SLTU),
-    XORI          ->  Tuple3( InstI, FuncALU, AluOp.XOR ),
-    ORI           ->  Tuple3( InstI, FuncALU, AluOp.OR  ),
-    ANDI          ->  Tuple3( InstI, FuncALU, AluOp.AND ),
-    SLLI          ->  Tuple3( InstI, FuncALU, AluOp.SLL ),
-    SRLI          ->  Tuple3( InstI, FuncALU, AluOp.SRL ),
-    SRAI          ->  Tuple3( InstI, FuncALU, AluOp.SRA ),
-    ADD           ->  Tuple3( InstR, FuncALU, AluOp.ADD ),
-    SUB           ->  Tuple3( InstR, FuncALU, AluOp.SUB ),
-    SLL           ->  Tuple3( InstR, FuncALU, AluOp.SLL ),
-    SLT           ->  Tuple3( InstR, FuncALU, AluOp.SLT ),
-    SLTU          ->  Tuple3( InstR, FuncALU, AluOp.SLTU),
-    XOR           ->  Tuple3( InstR, FuncALU, AluOp.XOR ),
-    SRL           ->  Tuple3( InstR, FuncALU, AluOp.SRL ),
-    SRA           ->  Tuple3( InstR, FuncALU, AluOp.SRA ),
-    OR            ->  Tuple3( InstR, FuncALU, AluOp.OR  ),
-    AND           ->  Tuple3( InstR, FuncALU, AluOp.AND )
+  //                                                    rd_enable
+  //                      | Inst | Func   |     Op    |
+  val DecodeDefault : List[UInt] = List( InstN, FuncALU, AluOp.ADD , Y)
+  val DecodeTable : Array[(BitPat, List[UInt])] = Array(
+    LUI           ->  List( InstU, FuncALU, AluOp.LUI , Y),
+    AUIPC         ->  List( InstU, FuncALU, AluOp.ADD , Y),
+    JAL           ->  List( InstJ, FuncBRU, BruOp.JAL , Y),
+    JALR          ->  List( InstI, FuncBRU, BruOp.JALR, Y),
+    BEQ           ->  List( InstB, FuncBRU, BruOp.BEQ , N),
+    BNE           ->  List( InstB, FuncBRU, BruOp.BNE , N),
+    BLT           ->  List( InstB, FuncBRU, BruOp.BLT , N),
+    BGE           ->  List( InstB, FuncBRU, BruOp.BGE , N),
+    BLTU          ->  List( InstB, FuncBRU, BruOp.BLTU, N),
+    BGEU          ->  List( InstB, FuncBRU, BruOp.BGEU, N),
+    LB            ->  List( InstI, FuncLSU, LsuOp.LB  , Y),
+    LH            ->  List( InstI, FuncLSU, LsuOp.LH  , Y),
+    LW            ->  List( InstI, FuncLSU, LsuOp.LW  , Y),
+    LBU           ->  List( InstI, FuncLSU, LsuOp.LBU , Y),
+    LHU           ->  List( InstI, FuncLSU, LsuOp.LHU , Y),
+    SB            ->  List( InstS, FuncLSU, LsuOp.SB  , N),
+    SH            ->  List( InstS, FuncLSU, LsuOp.SH  , N),
+    SW            ->  List( InstS, FuncLSU, LsuOp.SW  , N),
+    ADDI          ->  List( InstI, FuncALU, AluOp.ADD , Y),
+    SLTI          ->  List( InstI, FuncALU, AluOp.SLT , Y),
+    SLTIU         ->  List( InstI, FuncALU, AluOp.SLTU, Y),
+    XORI          ->  List( InstI, FuncALU, AluOp.XOR , Y),
+    ORI           ->  List( InstI, FuncALU, AluOp.OR  , Y),
+    ANDI          ->  List( InstI, FuncALU, AluOp.AND , Y),
+    SLLI          ->  List( InstI, FuncALU, AluOp.SLL , Y),
+    SRLI          ->  List( InstI, FuncALU, AluOp.SRL , Y),
+    SRAI          ->  List( InstI, FuncALU, AluOp.SRA , Y),
+    ADD           ->  List( InstR, FuncALU, AluOp.ADD , Y),
+    SUB           ->  List( InstR, FuncALU, AluOp.SUB , Y),
+    SLL           ->  List( InstR, FuncALU, AluOp.SLL , Y),
+    SLT           ->  List( InstR, FuncALU, AluOp.SLT , Y),
+    SLTU          ->  List( InstR, FuncALU, AluOp.SLTU, Y),
+    XOR           ->  List( InstR, FuncALU, AluOp.XOR , Y),
+    SRL           ->  List( InstR, FuncALU, AluOp.SRL , Y),
+    SRA           ->  List( InstR, FuncALU, AluOp.SRA , Y),
+    OR            ->  List( InstR, FuncALU, AluOp.OR  , Y),
+    AND           ->  List( InstR, FuncALU, AluOp.AND , Y),
+    FENCE         ->  List( InstI, FuncNONE,NoneOp    , N),
+    FENCE_I       ->  List( InstI, FuncNONE,NoneOp    , N),
+    ECALL         ->  List( InstI, FuncSYSU,NoneOp    , N),
+    EBREAK        ->  List( InstI, FuncSYSU,NoneOp    , N),
+    CSRRW         ->  List( InstI, FuncCSRU,NoneOp    , Y),
+    CSRRS         ->  List( InstI, FuncCSRU,NoneOp    , Y),
+    CSRRC         ->  List( InstI, FuncCSRU,NoneOp    , Y),
+    CSRRWI        ->  List( InstI, FuncCSRU,NoneOp    , Y),
+    CSRRSI        ->  List( InstI, FuncCSRU,NoneOp    , Y),
+    CSRRCI        ->  List( InstI, FuncCSRU,NoneOp    , Y)
     // todo: add decode for fence, ECall ... CSRop
+  )
+
+  val RsTypeTable = Seq (
+    InstN -> Tuple2(Rs1Reg, Rs2Reg),
+    InstU -> Tuple2(Rs1PC,  Rs2Imm),
+    InstJ -> Tuple2(Rs1PC,  Rs2Imm),
+    InstB -> Tuple2(Rs1Reg, Rs2Imm),
+    InstI -> Tuple2(Rs1Reg, Rs2Imm),
+    InstS -> Tuple2(Rs1Reg, Rs2Imm),
+    InstR -> Tuple2(Rs1Reg, Rs2Reg)
   )
 }
