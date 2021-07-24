@@ -45,15 +45,15 @@ case class ALUUnitTester(alu:ALU) extends PeekPokeTester (alu){
   for (op <- (0 to 15).toList) {
     for (a <- input) {
       for (b <- input){
-        poke(alu.io.a, a)
-        poke(alu.io.b, b)
-        poke(alu.io.op, op)
+        poke(alu.io.in.a, a)
+        poke(alu.io.in.b, b)
+        poke(alu.io.in.op, op)
         val ref:BigInt = asUnsigned(scalaALU(a, b, op))
-        val dut = peek(alu.io.out)
+        val dut = peek(alu.io.out.data)
         if (dut != ref) {
           println(f"a = $a%x, b = $b%x, op = $op%x, right = $ref%x, wrong = $dut%x")
         }
-        expect(alu.io.out, ref)
+        expect(alu.io.out.data, ref)
       }
     }
   }

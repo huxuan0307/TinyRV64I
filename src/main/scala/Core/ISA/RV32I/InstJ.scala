@@ -1,0 +1,9 @@
+package Core.ISA.RV32I
+
+import Core.Inst
+import chisel3.util.BitPat
+
+case object InstJ extends Inst {
+  //                        |-----------imm----------|--rd-|-opcode-|
+  val JAL: BitPat = BitPat("b????_????_????_????_????_?????_1101111")
+}

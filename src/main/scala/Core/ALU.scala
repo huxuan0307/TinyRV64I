@@ -1,5 +1,5 @@
 package Core
-import Core.Bundles.AluIO
+import Core.Bundles.ALU_IO
 
 
 import chisel3._
@@ -20,20 +20,20 @@ private object OP {
 }
 
 class ALU extends Module {
-  val io: AluIO = IO(new AluIO)
+  val io: ALU_IO = IO(new ALU_IO)
 
   val OpList = List(
-    (OP.ADD, io.a + io.b),
-    (OP.SLL, io.a << io.b(4, 0)), // just b[4:0]
-    (OP.SLT, Cat(0.U(63.W), io.a.asSInt < io.b.asSInt)),
-    (OP.SLTU, io.a < io.b),
-    (OP.XOR, io.a ^ io.b),
-    (OP.SRL, io.a >> io.b(4, 0)), // just b[4:0]
-    (OP.OR, io.a | io.b),
-    (OP.AND, io.a & io.b),
-    (OP.SUB, io.a - io.b),
-    (OP.SRA, (io.a.asSInt >> io.b(4,0)).asUInt)
+    (OP.ADD, io.in.a + io.in.b),
+    (OP.SLL, io.in.a << io.in.b(4, 0)), // just b[4:0]
+    (OP.SLT, Cat(0.U(63.W), io.in.a.asSInt < io.in.b.asSInt)),
+    (OP.SLTU, io.in.a < io.in.b),
+    (OP.XOR, io.in.a ^ io.in.b),
+    (OP.SRL, io.in.a >> io.in.b(4, 0)), // just b[4:0]
+    (OP.OR, io.in.a | io.in.b),
+    (OP.AND, io.in.a & io.in.b),
+    (OP.SUB, io.in.a - io.in.b),
+    (OP.SRA, (io.in.a.asSInt >> io.in.b(4,0)).asUInt)
   )
 
-  io.out := MuxLookup(io.op, 0.U, OpList)
+  io.out.data := MuxLookup(io.in.op, 0.U, OpList)
 }
