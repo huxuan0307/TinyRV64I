@@ -18,19 +18,20 @@ trait HasInstType {
   protected val InstI : UInt  = 4.U
   protected val InstS : UInt  = 5.U
   protected val InstR : UInt  = 6.U
+
 }
 
 trait HasFuncType {
-  protected val FuncTypeSize = 8
-  protected val FuncNONE      : UInt  = 0.U
-  protected val FuncALU       : UInt  = 1.U
-  protected val FuncBRU       : UInt  = 2.U
-  protected val FuncLSU       : UInt  = 3.U
-  protected val FuncMLTU      : UInt  = 4.U
-  protected val FuncDIVU      : UInt  = 5.U
-  protected val FuncSYSU      : UInt  = 6.U
-  protected val FuncCSRU      : UInt  = 7.U
-  protected val FuncTypeWidth : Width = log2Up(FuncTypeSize).W
+  protected def FuncTypeSize = 8
+  protected def FuncNONE      : UInt  = 0.U
+  protected def FuncALU       : UInt  = 1.U
+  protected def FuncBRU       : UInt  = 2.U
+  protected def FuncLSU       : UInt  = 3.U
+  protected def FuncMLTU      : UInt  = 4.U
+  protected def FuncDIVU      : UInt  = 5.U
+  protected def FuncSYSU      : UInt  = 6.U
+  protected def FuncCSRU      : UInt  = 7.U
+  protected def FuncTypeWidth : Width = log2Up(FuncTypeSize).W
 }
 
 trait HasFullOpType {

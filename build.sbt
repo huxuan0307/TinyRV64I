@@ -12,7 +12,7 @@ resolvers ++= Seq(
 )
 
 val defaultVersions = Map(
-  "chisel3" -> "3.1.+",
+  "chisel3" -> "3.3.+",
   "chisel-iotesters" -> "1.3-SNAPSHOT",
 )
 

@@ -9,10 +9,10 @@ class WriteBackOutPort extends Bundle with CoreConfig {
 
 class WriteBackUnitIO extends Bundle with CoreConfig {
   val in : ExecuteOutPort = Flipped(new ExecuteOutPort)
-  val out = new RegfileWritePortIO
+  val out = Flipped(new RegfileWritePortIO)
 }
 
 class WriteBackUnit extends Module {
-  val io = new WriteBackUnitIO
+  val io = IO(new WriteBackUnitIO)
   io.out <> io.in.w
 }

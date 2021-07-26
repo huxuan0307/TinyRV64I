@@ -10,7 +10,7 @@ trait HasRegfileParameter {
 }
 
 class RegfileImpl extends HasRegfileParameter {
-  val regfile: Mem[UInt] = Mem(regNum, UInt(regWidth.W))
+  val regfile: chisel3.Mem[UInt] = Mem(regNum, UInt(regWidth.W))
 
   def write(addr: UInt, data: UInt): Unit = {
     when(addr =/= 0.U) {
@@ -33,4 +33,5 @@ class Regfile extends Module with HasRegfileParameter {
   }
   io.r1.data := regfile.read(io.r1.addr)
   io.r2.data := regfile.read(io.r2.addr)
+  io.debug.data := regfile.read(io.debug.addr)
 }

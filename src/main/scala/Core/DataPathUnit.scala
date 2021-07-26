@@ -1,6 +1,6 @@
 package Core
 
-import Core.Bundles.RegfileWritePortIO
+import Core.Bundles.{RegfileDebugIO, RegfileWritePortIO}
 import chisel3._
 import chisel3.util._
 
@@ -8,11 +8,12 @@ class DataPathUnitIO extends Bundle {
   val from_idu : InstDecodeUnitOutPort = Flipped(new InstDecodeUnitOutPort)
   val from_wbu = new RegfileWritePortIO
   val to_exu : ExecuteInPort = Flipped(new ExecuteInPort)
+  val debug = new RegfileDebugIO
 }
 
 class DataPathUnit extends Module with HasRs1Type with HasRs2Type {
-  val io = new DataPathUnitIO
-  val rf = new Regfile
+  val io = IO(new DataPathUnitIO)
+  val rf = Module(new Regfile)
   rf.io.r1.addr   := io.from_idu.rs1Addr
   rf.io.r2.addr   := io.from_idu.rs2Addr
   rf.io.w <> io.from_wbu
@@ -30,6 +31,6 @@ class DataPathUnit extends Module with HasRs1Type with HasRs2Type {
   io.to_exu.w.ena     := io.from_idu.rdEna
   io.to_exu.w.addr    := io.from_idu.rdAddr
   io.to_exu.w.data    := DontCare
-
+  io.debug            <> rf.io.debug
 
 }
