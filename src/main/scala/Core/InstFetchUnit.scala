@@ -8,7 +8,7 @@ class InstFetchUnitIO extends Bundle {
 }
 
 trait PcInit {
-  val pc_init = 0x80000000L
+  val pc_init = 0x00010000L
 }
 
 class InstFetchUnit extends Module with PcInit with CoreConfig {

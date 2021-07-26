@@ -1,21 +1,28 @@
-name := "TinyRV32I"
+// See README.md for license details.
 
-version := "0.1"
+ThisBuild / scalaVersion     := "2.12.13"
+ThisBuild / version          := "0.1.0"
 
-scalaVersion := "2.11.12"
+ThisBuild / crossScalaVersions := Seq("2.11.12", "2.12.13")
 
-crossScalaVersions := Seq("2.11.12", "2.12.4")
 
-resolvers ++= Seq(
-  Resolver.sonatypeRepo("snapshots"),
-  Resolver.sonatypeRepo("releases")
-)
+lazy val root = (project in file("."))
+  .settings(
+    name := "TinyRV32I",
+    libraryDependencies ++= Seq(
+      "edu.berkeley.cs" %% "chisel3" % "3.4.3",
+      "edu.berkeley.cs" %% "chiseltest" % "0.3.3" % "test",
+    ),
+    scalacOptions ++= Seq(
+      "-Xsource:2.11",
+      "-language:reflectiveCalls",
+      "-deprecation",
+      "-feature",
+      "-Xcheckinit",
+      // Enables autoclonetype2 in 3.4.x (on by default in 3.5)
+      "-P:chiselplugin:useBundlePlugin"
+    ),
+    addCompilerPlugin("edu.berkeley.cs" % "chisel3-plugin" % "3.4.3" cross CrossVersion.full),
+    addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full)
+  )
 
-val defaultVersions = Map(
-  "chisel3" -> "3.3.+",
-  "chisel-iotesters" -> "1.3-SNAPSHOT",
-)
-
-libraryDependencies ++= Seq("chisel3","chisel-iotesters").map { dep: String =>
-  "edu.berkeley.cs" %% dep % sys.props.getOrElse(dep + "Version", defaultVersions(dep))
-}

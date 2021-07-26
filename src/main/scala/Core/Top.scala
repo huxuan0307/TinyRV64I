@@ -11,12 +11,12 @@ class TopIO extends Bundle {
 }
 
 class Top extends Module {
-  val io : TopIO            = new TopIO
-  protected  val ifu        = Module(new InstFetchUnit)
-  protected  val wbu        = Module(new WriteBackUnit)
-  protected  val idu        = Module(new InstDecodeUnit)
-  protected  val exu        = Module(new ExecuteUnit)
-  protected  val data_path  = Module(new DataPathUnit)
+  val io : TopIO            = IO(new TopIO)
+  protected  val data_path : DataPathUnit = Module(new DataPathUnit)
+  protected  val ifu : InstFetchUnit = Module(new InstFetchUnit)
+  protected  val wbu : WriteBackUnit = Module(new WriteBackUnit)
+  protected  val idu : InstDecodeUnit = Module(new InstDecodeUnit)
+  protected  val exu : ExecuteUnit = Module(new ExecuteUnit)
 
   ifu.io.imem           <> io.imem
   ifu.io.to_idu         <> idu.io.in
@@ -27,4 +27,5 @@ class Top extends Module {
   exu.io.dmem           <> io.dmem
   io.ill_inst           := idu.io.illegal
   io.debug              <> data_path.io.debug
+
 }

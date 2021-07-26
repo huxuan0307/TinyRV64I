@@ -37,12 +37,12 @@ class InstDecodeUnit extends Module with HasRs1Type with HasRs2Type with CoreCon
   }
   def zext(width: Int, src: UInt) : UInt = Cat(Fill(width - src.getWidth, 0.U(1.W)), src)
 
-  val tmp = Cat(inst(31, 12), 0.U(12.W))
+//  private val tmp = Cat(inst(31, 12), 0.U(12.W))
 
   // data
   io.out.rs1Data      := DontCare
   io.out.rs2Data      := MuxLookup(instType, 0.U, List(
-//    InstU-> Cat(Fill(XLEN - tmp.getWidth, msb(tmp)), tmp),
+// todo    InstU-> Cat(Fill(XLEN - tmp.getWidth, msb(tmp)), tmp),
 //      InstU -> sext(XLEN, Cat(inst(31, 12), 0.U(12.W))),
       InstJ -> sext(XLEN, Cat(inst(31), inst(19,12), inst(20), inst(30,21), 0.U(1.W))),
       InstB -> sext(XLEN, Cat(inst(31), inst(7), inst(30,25), inst(11,8), 0.U(1.W))),
@@ -50,5 +50,6 @@ class InstDecodeUnit extends Module with HasRs1Type with HasRs2Type with CoreCon
       InstS -> sext(XLEN, Cat(inst(31,25), inst(11,7)))
   ))
   io.out.rd           := DontCare
+  io.out.pc           := DontCare
   io.illegal          := instType === InstN
 }

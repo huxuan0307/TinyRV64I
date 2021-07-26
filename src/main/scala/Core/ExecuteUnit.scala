@@ -24,11 +24,12 @@ class EXU_IO extends Bundle{
 class ExecuteUnit extends Module {
   val io: EXU_IO = IO(new EXU_IO)
 
-  val alu = new ALU
+  protected val alu : ALU = Module(new ALU)
   alu.io.in.a   := io.in.op_num1
   alu.io.in.b   := io.in.op_num2
   alu.io.in.op  := io.in.op_type
   io.out.w.data := alu.io.out.data
   io.out.w.ena  := io.in.w.ena
   io.out.w.addr := io.in.w.addr
+  io.dmem       <> DontCare
 }
