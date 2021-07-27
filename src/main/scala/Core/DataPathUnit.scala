@@ -31,7 +31,10 @@ class DataPathUnit extends Module with HasRs1Type with HasRs2Type {
   io.to_exu.func_type := io.from_idu.funcType
   io.to_exu.w.ena     := io.from_idu.rdEna
   io.to_exu.w.addr    := io.from_idu.rdAddr
-  // 借用wdata放S指令的写内存数据
+  io.to_exu.pc        := io.from_idu.pc
+  // 借用wdata放S指令的写内存数据，立即数在from_idu.rs2Data中，
+  // B指令也需要传递立即数和一个寄存器的值，于是使用wdata传递寄存器的值，
+  // 用op_num2传递立即数，与S指令路径相同，可以减少一个Mux
   io.to_exu.w.data    := rf.io.r2.data
   io.debug            <> rf.io.debug
 

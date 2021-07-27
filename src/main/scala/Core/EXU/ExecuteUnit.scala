@@ -10,6 +10,7 @@ class ExecuteInPort extends Bundle with CoreConfig with HasFuncType with HasFull
   val op_type : UInt = Input(UInt(FullOpTypeWidth))
   val op_num1 : UInt = Input(UInt(DATA_WIDTH))
   val op_num2 : UInt = Input(UInt(DATA_WIDTH))
+  val pc      : UInt = Input(UInt(ADDR_WIDTH))
   val w : RegfileWritePortIO = new RegfileWritePortIO
 }
 
@@ -21,6 +22,7 @@ class EXU_IO extends Bundle{
   val in = new ExecuteInPort
   val out = new ExecuteOutPort
   val dmem : DMemIO = Flipped(new DMemIO)
+  val branch = new BranchPathIO
 }
 
 class ExecuteUnit extends Module with HasFuncType with CoreConfig {
@@ -28,6 +30,8 @@ class ExecuteUnit extends Module with HasFuncType with CoreConfig {
 
   protected val alu : ALU           = Module(new ALU)
   protected val lsu : LoadStoreUnit = Module(new LoadStoreUnit)
+  protected val bru : BranchUnit    = Module(new BranchUnit)
+
   alu.io.in.a     := io.in.op_num1
   alu.io.in.b     := io.in.op_num2
   alu.io.in.op    := io.in.op_type
@@ -37,12 +41,21 @@ class ExecuteUnit extends Module with HasFuncType with CoreConfig {
   lsu.io.in.data    := io.in.w.data
   lsu.io.in.op_type := io.in.op_type
   lsu.io.in.ena     := io.in.func_type === FuncLSU
+  bru.io.in.op_num1 := io.in.op_num1
+  bru.io.in.op_num2 := io.in.w.data
+  bru.io.in.op_type := io.in.op_type
+  bru.io.in.pc      := io.in.pc
+  bru.io.in.offset  := io.in.op_num2
+  bru.io.in.ena     := io.in.func_type === FuncBRU
+
   io.out.w.data := MuxLookup(io.in.func_type, 0.U(XLEN.W), Array(
     FuncALU -> alu.io.out.data,
-    FuncLSU -> lsu.io.out.data
+    FuncLSU -> lsu.io.out.data,
+    FuncBRU -> (io.in.pc + 4.U)
   ))
 
   io.out.w.ena  := io.in.w.ena
   io.out.w.addr := io.in.w.addr
   io.dmem       <> lsu.io.dmem
+  io.branch     <> bru.io.out
 }

@@ -29,5 +29,5 @@ class Top extends Module {
   exu.io.dmem           <> dmem.io
   io.ill_inst           := idu.io.illegal
   io.debug              <> data_path.io.debug
-
+  ifu.io.branch         <> exu.io.branch
 }

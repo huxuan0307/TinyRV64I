@@ -27,10 +27,15 @@ trait DecoderCtrlPathIO extends Bundle with CtrlPathIO
 trait DecoderDataPathIO extends Bundle with DataPathIO with DecodeConst with CoreConfig
 
 class InstDecodeUnitOutPort extends DecoderCtrlPathIO with DecoderDataPathIO {
-  val pc : UInt = Output(UInt(INST_WIDTH))
+  val pc : UInt = Output(UInt(ADDR_WIDTH))
 }
 
 class PcInstPathIO extends Bundle with CoreConfig {
-  val pc:   UInt = Output(UInt(32.W))
-  val inst: UInt = Output(UInt(32.W))
+  val pc:   UInt = Output(UInt(ADDR_WIDTH))
+  val inst: UInt = Output(UInt(INST_WIDTH))
+}
+
+class BranchPathIO extends Bundle with CoreConfig {
+  val valid : Bool = Output(Bool())
+  val new_pc : UInt = Output(UInt(ADDR_WIDTH))
 }

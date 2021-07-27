@@ -1,6 +1,6 @@
 package Core
 
-import Core.EXU.LsuOp
+import Core.EXU.{LsuOp, AluOp, BruOp}
 import chisel3._
 import ISA.RV32I.InstI._
 import ISA.RV32I.InstJ._
@@ -20,32 +20,11 @@ object Decode
     with BasicDefine
 {
   private val NoneOp : UInt = "b0000".U
-  object AluOp {
-    val ADD : UInt  = "b0000".U
-    val SLL : UInt  = "b0001".U
-    val SLT : UInt  = "b0010".U
-    val SLTU: UInt  = "b0011".U
-    val XOR : UInt  = "b0100".U
-    val SRL : UInt  = "b0101".U
-    val OR  : UInt  = "b0110".U
-    val AND : UInt  = "b0111".U
-    val SUB : UInt  = "b1000".U | ADD
-    val SRA : UInt  = "b1000".U | SRL
-    val LUI : UInt  = "b1111".U
-  }
 
 
 
-  object BruOp {
-    val BEQ  :UInt = "b0000".U
-    val BNE  :UInt = "b0001".U
-    val BLT  :UInt = "b0100".U
-    val BGE  :UInt = "b0101".U
-    val BLTU :UInt = "b0110".U
-    val BGEU :UInt = "b0111".U
-    val JAL  :UInt = "b1000".U
-    val JALR :UInt = "b1001".U
-  }
+
+
 
   //                                                    rd_enable
   //                      | Inst | Func   |     Op    |
@@ -105,7 +84,7 @@ object Decode
     InstN -> Tuple2(Rs1Reg, Rs2Reg),
     InstU -> Tuple2(Rs1PC,  Rs2Imm),
     InstJ -> Tuple2(Rs1PC,  Rs2Imm),
-    InstB -> Tuple2(Rs1Reg, Rs2Imm),
+    InstB -> Tuple2(Rs1Reg, Rs2Imm),  // B指令的寄存器数在wdata中传递
     InstI -> Tuple2(Rs1Reg, Rs2Imm),
     InstS -> Tuple2(Rs1Reg, Rs2Imm),
     InstR -> Tuple2(Rs1Reg, Rs2Reg)
