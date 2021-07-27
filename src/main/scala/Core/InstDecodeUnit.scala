@@ -18,8 +18,8 @@ class InstDecodeUnit extends Module with HasRs1Type with HasRs2Type with CoreCon
   protected val rdReg : UInt = inst(11, 7)
   protected val instType :: funcType :: opType :: rdEna :: Nil
     = ListLookup(inst, DecodeDefault, DecodeTable)
-  io.out.rs1Type := MuxLookup(funcType, Rs1None, RsTypeTable.map(p => (p._1, p._2._1)))
-  io.out.rs2Type := MuxLookup(funcType, Rs2None, RsTypeTable.map(p => (p._1, p._2._2)))
+  io.out.rs1Type := MuxLookup(instType, Rs1None, RsTypeTable.map(p => (p._1, p._2._1)))
+  io.out.rs2Type := MuxLookup(instType, Rs2None, RsTypeTable.map(p => (p._1, p._2._2)))
 //  Cat(io.out.rs1Type, io.out.rs2Type) := MuxLookup(instType, Cat(Rs1None, Rs2None), RsTypeTable.map(p=>(p._1, Cat(p._2._1, p._2._1))))
   io.out.funcType := funcType
   io.out.opType   := opType

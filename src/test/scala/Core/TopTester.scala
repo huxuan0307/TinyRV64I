@@ -2,7 +2,14 @@ package Core
 
 import chisel3._
 import chiseltest._
+import chiseltest.experimental.TestOptionBuilder._
+import chiseltest.experimental.UncheckedClockPoke._
+import chiseltest.internal.VerilatorBackendAnnotation
+import treadle.executable.ClockInfo
+import treadle.{ClockInfoAnnotation, WriteVcdAnnotation}
+
 import org.scalatest.FreeSpec
+
 
 import java.nio.{ByteOrder, IntBuffer}
 import java.io.FileInputStream
@@ -17,15 +24,15 @@ class TopTester extends FreeSpec with ChiselScalatestTester with PcInit {
     }
   }
   "Top test" in {
-    test(new Top) {
+    test(new Top).withAnnotations(Seq(WriteVcdAnnotation)) {
       top =>
         val imgPath = ""
         val memSize = 4*1024*1024
         val mem = {
           if (imgPath=="") {
             val mem = Array.fill((pc_init / 4).toInt)(0) ++ Array(
-              0x07b08093,   // addi x1,x1,123
               0xf8508093,   // addi x1,x1,-123
+              0x07b08093,   // addi x1,x1,123
               //        0x0000806b,   // trap x1
               2, 1, 0
             )
@@ -52,7 +59,10 @@ class TopTester extends FreeSpec with ChiselScalatestTester with PcInit {
           top.clock.step()
           show_regfile(top)
           ill_inst = top.io.ill_inst.peek().litValue().toInt
-
+          // 不能peek内部的模块
+//          val alu_a = top.data_path.io.to_exu.op_num1.peek().litValue().toInt
+//          val alu_b = top.data_path.io.to_exu.op_num2.peek().litValue().toInt
+//          println(f"alu a: $alu_a%08x, b: $alu_b%08x")
         } while (ill_inst == 0)
         println(f"ill_inst: $instr%08x as pc: $pc%08x")
         show_regfile(top)
