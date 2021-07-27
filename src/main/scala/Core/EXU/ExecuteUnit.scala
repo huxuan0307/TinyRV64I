@@ -1,0 +1,48 @@
+package Core.EXU
+
+import Core.Bundles.RegfileWritePortIO
+import Core._
+import chisel3._
+import chisel3.util._
+
+class ExecuteInPort extends Bundle with CoreConfig with HasFuncType with HasFullOpType{
+  val func_type : UInt = Input(UInt(FuncTypeWidth))
+  val op_type : UInt = Input(UInt(FullOpTypeWidth))
+  val op_num1 : UInt = Input(UInt(DATA_WIDTH))
+  val op_num2 : UInt = Input(UInt(DATA_WIDTH))
+  val w : RegfileWritePortIO = new RegfileWritePortIO
+}
+
+class ExecuteOutPort extends Bundle with CoreConfig {
+  val w : RegfileWritePortIO = Flipped(new RegfileWritePortIO)
+}
+
+class EXU_IO extends Bundle{
+  val in = new ExecuteInPort
+  val out = new ExecuteOutPort
+  val dmem : DMemIO = Flipped(new DMemIO)
+}
+
+class ExecuteUnit extends Module with HasFuncType with CoreConfig {
+  val io: EXU_IO = IO(new EXU_IO)
+
+  protected val alu : ALU           = Module(new ALU)
+  protected val lsu : LoadStoreUnit = Module(new LoadStoreUnit)
+  alu.io.in.a     := io.in.op_num1
+  alu.io.in.b     := io.in.op_num2
+  alu.io.in.op    := io.in.op_type
+  alu.io.in.ena   := io.in.func_type === FuncALU
+  lsu.io.in.op_num1 := io.in.op_num1
+  lsu.io.in.op_num2 := io.in.op_num2
+  lsu.io.in.data    := io.in.w.data
+  lsu.io.in.op_type := io.in.op_type
+  lsu.io.in.ena     := io.in.func_type === FuncLSU
+  io.out.w.data := MuxLookup(io.in.func_type, 0.U(XLEN.W), Array(
+    FuncALU -> alu.io.out.data,
+    FuncLSU -> lsu.io.out.data
+  ))
+
+  io.out.w.ena  := io.in.w.ena
+  io.out.w.addr := io.in.w.addr
+  io.dmem       <> lsu.io.dmem
+}

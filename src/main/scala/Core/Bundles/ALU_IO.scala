@@ -4,13 +4,14 @@ import Core.{CoreConfig, HasFullOpType}
 import chisel3._
 
 class ALU_InputPortIO extends Bundle with CoreConfig with HasFullOpType{
+  val ena : Bool = Input(Bool())
   val op: UInt = Input(UInt(FullOpTypeWidth))
   val a: UInt = Input(UInt(DATA_WIDTH))
   val b: UInt = Input(UInt(DATA_WIDTH))
 }
 
-class ALU_OutputPortIO extends Bundle {
-  val data: UInt = Output(UInt(32.W))
+class ALU_OutputPortIO extends Bundle with CoreConfig {
+  val data: UInt = Output(UInt(DATA_WIDTH))
 }
 
 class ALU_IO extends Bundle {

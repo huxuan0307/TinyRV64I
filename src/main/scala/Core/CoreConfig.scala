@@ -9,7 +9,8 @@ trait CoreConfig {
   protected def INST_WIDTH: Width = 32.W
   protected def ADDR_WIDTH: Width = 32.W
   protected def DATA_WIDTH: Width = XLEN.W
-  protected def MEM_DATA_WIDTH : Width = 32.W
+  // 按Byte编址
+  protected def MEM_DATA_WIDTH : Width = 8.W
   protected def IMEM_SIZE = 256
   protected def DMEM_SIZE = 256
 

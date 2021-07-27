@@ -17,7 +17,7 @@ import java.nio.channels.FileChannel
 
 class TopTester extends FreeSpec with ChiselScalatestTester with PcInit {
   def show_regfile(top: Top) : Unit = {
-    for (i <- 0 to 31) {
+    for (i <- 0 to 7) {
       top.io.debug.addr.poke(i.U)
       val reg = top.io.debug.data.peek().litValue()
       println(f"rf[$i%2d] : $reg%08x")
@@ -26,7 +26,7 @@ class TopTester extends FreeSpec with ChiselScalatestTester with PcInit {
   "Top test" in {
     test(new Top).withAnnotations(Seq(WriteVcdAnnotation)) {
       top =>
-        val imgPath = ""
+        val imgPath = "z:/home/huxuan/repo/am-kernels/tests/cpu-tests/single_tests/asm/shift.bin"
         val memSize = 4*1024*1024
         val mem = {
           if (imgPath=="") {
@@ -55,7 +55,7 @@ class TopTester extends FreeSpec with ChiselScalatestTester with PcInit {
           assert((pc & 0x3) == 0)
           instr = mem(pc >> 2) & 0xffffffffL
           println(f"inst: $instr%08x")
-          top.io.imem.data.poke(instr.U(32.W))
+          top.io.imem.rdata.poke(instr.U(32.W))
           top.clock.step()
           show_regfile(top)
           ill_inst = top.io.ill_inst.peek().litValue().toInt
@@ -65,7 +65,7 @@ class TopTester extends FreeSpec with ChiselScalatestTester with PcInit {
 //          println(f"alu a: $alu_a%08x, b: $alu_b%08x")
         } while (ill_inst == 0)
         println(f"ill_inst: $instr%08x as pc: $pc%08x")
-        show_regfile(top)
+
         fork {
 
         }.join()

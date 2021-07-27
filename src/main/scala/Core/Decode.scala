@@ -1,5 +1,6 @@
 package Core
 
+import Core.EXU.LsuOp
 import chisel3._
 import ISA.RV32I.InstI._
 import ISA.RV32I.InstJ._
@@ -33,16 +34,7 @@ object Decode
     val LUI : UInt  = "b1111".U
   }
 
-  object LsuOp {
-    val LB  :UInt  = "b0000".U
-    val LH  :UInt  = "b0001".U
-    val LW  :UInt  = "b0010".U
-    val LBU :UInt  = "b0100".U
-    val LHU :UInt  = "b0101".U
-    val SB  :UInt  = "b1000".U
-    val SH  :UInt  = "b1001".U
-    val SW  :UInt  = "b1010".U
-  }
+
 
   object BruOp {
     val BEQ  :UInt = "b0000".U
