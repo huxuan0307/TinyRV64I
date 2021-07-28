@@ -3,14 +3,8 @@ package Core
 import Core.Bundles.RegfileIO
 import chisel3._
 
-trait HasRegfileParameter {
-  val resetVector = 0
-  val regWidth = 32
-  val regNum = 32
-}
-
-class RegfileImpl extends HasRegfileParameter {
-  val regfile: chisel3.Mem[UInt] = Mem(regNum, UInt(regWidth.W))
+class RegfileImpl extends CoreConfig {
+  val regfile: chisel3.Mem[UInt] = Mem(REG_NUM, UInt(DATA_WIDTH))
 
   def write(addr: UInt, data: UInt): Unit = {
     when(addr =/= 0.U) {
@@ -24,7 +18,7 @@ class RegfileImpl extends HasRegfileParameter {
   }
 }
 
-class Regfile extends Module with HasRegfileParameter {
+class Regfile extends Module with CoreConfig {
   val io: RegfileIO = IO(new RegfileIO)
   val regfile = new RegfileImpl
 

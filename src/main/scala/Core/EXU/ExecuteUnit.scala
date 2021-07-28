@@ -12,6 +12,7 @@ class ExecuteInPort extends Bundle with CoreConfig with HasFuncType with HasFull
   val op_num2 : UInt = Input(UInt(DATA_WIDTH))
   val pc      : UInt = Input(UInt(ADDR_WIDTH))
   val w : RegfileWritePortIO = new RegfileWritePortIO
+  val is_word_type : Bool = Input(Bool())
 }
 
 class ExecuteOutPort extends Bundle with CoreConfig {
@@ -36,6 +37,7 @@ class ExecuteUnit extends Module with HasFuncType with CoreConfig {
   alu.io.in.b     := io.in.op_num2
   alu.io.in.op    := io.in.op_type
   alu.io.in.ena   := io.in.func_type === FuncALU
+  alu.io.in.is_word_type := io.in.is_word_type
   lsu.io.in.op_num1 := io.in.op_num1
   lsu.io.in.op_num2 := io.in.op_num2
   lsu.io.in.data    := io.in.w.data

@@ -1,7 +1,6 @@
 package Core
 
 import chisel3._
-import chisel3.util._
 
 trait DataPathIO extends Bundle with CoreConfig {
   val rs1_data: UInt = Output(UInt(DATA_WIDTH))
@@ -20,6 +19,8 @@ trait CtrlPathIO extends Bundle with DecodeConst with CoreConfig {
   val rs2Addr  : UInt  = Output(UInt(REG_ADDR_WIDTH))
   val rdEna   : UInt  = Output(UInt(1.W))
   val rdAddr   : UInt  = Output(UInt(REG_ADDR_WIDTH))
+
+  val is_word_type : Bool = Output(Bool())
 }
 
 trait DecoderCtrlPathIO extends Bundle with CtrlPathIO

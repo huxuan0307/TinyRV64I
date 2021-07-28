@@ -34,10 +34,10 @@ class BranchUnit extends Module {
   io.out.valid := io.in.ena & MuxLookup(io.in.op_type, false.B, Array(
     BruOp.BEQ -> (io.in.op_num1 === io.in.op_num2),
     BruOp.BNE -> (io.in.op_num1 =/= io.in.op_num2),
-    BruOp.BLT -> (io.in.op_num1 < io.in.op_num2),
-    BruOp.BGE -> (io.in.op_num1 >= io.in.op_num2),
-    BruOp.BLTU -> (io.in.op_num1.asSInt() < io.in.op_num2.asSInt()),
-    BruOp.BGEU -> (io.in.op_num1.asSInt() >= io.in.op_num2.asSInt()),
+    BruOp.BLT -> (io.in.op_num1.asSInt() < io.in.op_num2.asSInt()),
+    BruOp.BGE -> (io.in.op_num1.asSInt() >= io.in.op_num2.asSInt()),
+    BruOp.BLTU -> (io.in.op_num1 < io.in.op_num2),
+    BruOp.BGEU -> (io.in.op_num1 >= io.in.op_num2),
     BruOp.JAL -> true.B,
     BruOp.JALR -> true.B
   ))

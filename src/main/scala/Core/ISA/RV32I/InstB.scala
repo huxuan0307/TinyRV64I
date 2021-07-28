@@ -1,9 +1,8 @@
 package Core.ISA.RV32I
 
-import Core.ISA.Inst
 import chisel3.util.BitPat
 
-object InstB extends Inst {
+trait InstB{
   // use rs2 and rs1
   // not use rd
   //                          |--imm--|-rs2-|-rs1-|func3|-imm-|-opcode-|

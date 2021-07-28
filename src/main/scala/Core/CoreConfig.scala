@@ -12,8 +12,11 @@ trait CoreConfig {
   // 按Byte编址
   protected def MEM_DATA_WIDTH : Width = 8.W
   protected def IMEM_SIZE = 256
-  protected def DMEM_SIZE = 256
+  protected def DMEM_SIZE : Int = 256*1024
 
   protected def REG_NUM: Int = 32
   protected def REG_ADDR_WIDTH: Width = log2Up(REG_NUM).W
+
+  // ALU
+  protected def SHIFT_MSB : Int = log2Up(XLEN) - 1
 }

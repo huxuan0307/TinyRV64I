@@ -1,9 +1,8 @@
 package Core.ISA.RV32I
 
-import Core.ISA.Inst
 import chisel3.util.BitPat
 
-object InstS extends Inst {
+trait InstS {
   // use rd
   //                            |--imm--|-rs2-|-rs1-|func3|--rd-|-opcode-|
   val SB    : BitPat  = BitPat("b???????_?????_?????__000__?????_0100011")

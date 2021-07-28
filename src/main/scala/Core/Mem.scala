@@ -13,6 +13,7 @@ class MemDebugPort extends Bundle with CoreConfig {
 }
 
 trait MemWritePortForReadOnly extends CoreConfig {
+  val valid : Bool = Input(Bool())
   val addr : UInt = Input(UInt(ADDR_WIDTH))
   val data_type : UInt = Input(UInt(2.W))
 }

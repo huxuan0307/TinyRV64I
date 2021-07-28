@@ -36,6 +36,7 @@ class DataPathUnit extends Module with HasRs1Type with HasRs2Type {
   // B指令也需要传递立即数和一个寄存器的值，于是使用wdata传递寄存器的值，
   // 用op_num2传递立即数，与S指令路径相同，可以减少一个Mux
   io.to_exu.w.data    := rf.io.r2.data
+  io.to_exu.is_word_type := io.from_idu.is_word_type
   io.debug            <> rf.io.debug
 
 }

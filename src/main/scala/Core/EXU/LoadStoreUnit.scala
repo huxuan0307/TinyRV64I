@@ -58,11 +58,7 @@ class LoadStoreUnit extends Module with CoreConfig with HasMemDataType {
     LsuOp.SW -> zext(XLEN, io.in.data(31,0)),
     LsuOp.SD -> zext(XLEN, io.in.data(63,0))
   )),0.U(DATA_WIDTH))
-  io.dmem.data_type := MuxLookup(io.in.op_type, type_d, Array(
-    LsuOp.SB -> type_b,
-    LsuOp.SH -> type_h,
-    LsuOp.SW -> type_w,
-    LsuOp.SD -> type_d
-  ))
+  io.dmem.data_type := io.in.op_type(1,0)
+  io.dmem.valid := io.in.ena & true.B
   io.dmem.debug.addr := DontCare
 }

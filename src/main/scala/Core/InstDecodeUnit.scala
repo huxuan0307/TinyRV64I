@@ -1,8 +1,8 @@
 package Core
 
+import Core.Decode._
 import chisel3._
 import chisel3.util._
-import Core.Decode.{InstJ, _}
 
 class InstDecodeUnitIO extends Bundle {
   val in: PcInstPathIO = Flipped(new PcInstPathIO)
@@ -41,8 +41,8 @@ class InstDecodeUnit extends Module with HasRs1Type with HasRs2Type with CoreCon
       InstI -> sext(XLEN, inst(31,20)),
       InstS -> sext(XLEN, Cat(inst(31,25), inst(11,7)))
   ))
-
-  io.out.rd_data           := DontCare
+  io.out.is_word_type   := inst(3)
+  io.out.rd_data        := DontCare
   io.out.pc           := io.in.pc
   io.illegal          := instType === InstN
 }

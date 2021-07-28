@@ -1,7 +1,7 @@
 package Core.EXU
 
 import Core.Bundles.ALU_IO
-import Core.CoreConfig
+import Core.{CoreConfig, sext}
 import chisel3._
 import chisel3.util.{Cat, MuxLookup}
 
@@ -22,25 +22,32 @@ object AluOp {
 
 class ALU extends Module with CoreConfig {
   val io: ALU_IO = IO(new ALU_IO)
-
+  private val op_num1 = Wire(UInt(DATA_WIDTH))
+  private val op_num2 = Wire(UInt(DATA_WIDTH))
+  private val shamt = Wire(UInt((SHIFT_MSB + 1).W))
+  op_num1 := io.in.a
+  op_num2 := io.in.b
+  shamt := op_num2(SHIFT_MSB, 0)
   private val OpList = List(
-    (AluOp.ADD, io.in.a + io.in.b),
-    (AluOp.SLL, io.in.a << io.in.b(4, 0)), // just b[4:0]
-    (AluOp.SLT, Cat(0.U((XLEN - 1).W), io.in.a.asSInt < io.in.b.asSInt)),
-    (AluOp.SLTU, io.in.a < io.in.b),
-    (AluOp.XOR, io.in.a ^ io.in.b),
-    (AluOp.SRL, io.in.a >> io.in.b(4, 0)), // just b[4:0]
-    (AluOp.OR, io.in.a | io.in.b),
-    (AluOp.AND, io.in.a & io.in.b),
-    (AluOp.SUB, io.in.a - io.in.b),
-    (AluOp.SRA, (io.in.a.asSInt >> io.in.b(4,0)).asUInt),
+    (AluOp.ADD, op_num1 + op_num2),
+    (AluOp.SLL, op_num1 << shamt),
+    (AluOp.SLT, Cat(0.U((XLEN - 1).W), op_num1.asSInt < op_num2.asSInt)),
+    (AluOp.SLTU, op_num1 < op_num2),
+    (AluOp.XOR, op_num1 ^ op_num2),
+    (AluOp.SRL, Mux(io.in.is_word_type, Cat(0.U(32.W), op_num1(31,0)), op_num1) >> shamt),
+    (AluOp.OR, op_num1 | op_num2),
+    (AluOp.AND, op_num1 & op_num2),
+    (AluOp.SUB, op_num1 - op_num2),
+    (AluOp.SRA, (op_num1.asSInt >> shamt).asUInt),
     // 不需要再位移12位，在DataPathUnit里已经位移了
-    (AluOp.LUI, io.in.b)
+    (AluOp.LUI, op_num2)
   )
+  val tmp_res : UInt = Wire(UInt(DATA_WIDTH))
+  tmp_res := MuxLookup(io.in.op, 0.U, OpList)
 
-  when(io.in.ena){
-    io.out.data := MuxLookup(io.in.op, 0.U, OpList)
-  } otherwise {
-    io.out.data := 0.U(DATA_WIDTH)
-  }
+  io.out.data := Mux(
+    io.in.is_word_type,
+    sext(XLEN, tmp_res(31, 0)),
+    tmp_res
+  )
 }

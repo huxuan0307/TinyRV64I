@@ -2,15 +2,7 @@ package Core
 
 import Core.EXU.{LsuOp, AluOp, BruOp}
 import chisel3._
-import ISA.RV32I.InstI._
-import ISA.RV32I.InstJ._
-import ISA.RV32I.InstU._
-import ISA.RV32I.InstB._
-import ISA.RV32I.InstR._
-import ISA.RV32I.InstS._
-import ISA.RV64I.InstI._
-import ISA.RV64I.InstR._
-import ISA.RV64I.InstS._
+import ISA.RV64I._
 
 import chisel3.util.BitPat
 
