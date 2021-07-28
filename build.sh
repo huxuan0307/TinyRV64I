@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="1.4"
+VERSION="1.5"
 
 help() {
     echo "Version v"$VERSION
@@ -34,7 +34,7 @@ create_soft_link() {
 
 build_diff_proj() {
     # Refresh the modification time of the top file, otherwise some changes to the RTL source code will not take effect in next compilation.
-    touch -m `find $PROJECT_PATH/$VSRC_FOLDER/ -name $DIFFTEST_TOP_FILE`
+    touch -m `find $BUILD_PATH -name $DIFFTEST_TOP_FILE` 1>/dev/null 2>&1
     # create soft link ($BUILD_PATH/*.v -> $PROJECT_PATH/$VSRC_FOLDER/*.v)
     create_soft_link $BUILD_PATH $PROJECT_PATH/$VSRC_FOLDER \"*.v\"
     # create soft link ($PROJECT_PATH/difftest -> $OSCPU_PATH/difftest)
@@ -182,7 +182,7 @@ if [[ "$SIMULATE" == "true" ]]; then
 
     if [ $? -ne 0 ]; then
         echo "Failed to simulate!!!"
-        exit 1
+        FAILED="true"
     fi
 
     cd $OSCPU_PATH
@@ -197,4 +197,8 @@ if [[ "$CHECK_WAVE" == "true" ]]; then
         exit 1
     fi
     cd $OSCPU_PATH
+fi
+
+if [[ "$FAILED" == "true" ]]; then
+    exit 1
 fi

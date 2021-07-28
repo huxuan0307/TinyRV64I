@@ -50,105 +50,93 @@ wire [4 : 0]inst_type_o;
 wire [`REG_BUS]rd_data;
 
 
-// Access memory
-reg [63:0] rdata;
-RAMHelper RAMHelper(
-  .clk              (clock),
-  .en               (1),
-  .rIdx             ((pc - `PC_START) >> 3),
-  .rdata            (rdata),
-  .wIdx             (0),
-  .wdata            (0),
-  .wmask            (0),
-  .wen              (0)
-);
-assign inst = pc[2] ? rdata[63 : 32] : rdata[31 : 0];
-
-
 if_stage If_stage(
-  .clk(clock),
-  .rst(reset),
+  .clk                (clock),
+  .rst                (reset),
   
-  .pc_o(pc)
+  .pc                 (pc),
+  .inst               (inst)
 );
 
 id_stage Id_stage(
-  .rst              (reset),
-  .inst             (inst),
-  .rs1_data         (r_data1),
-  .rs2_data         (r_data2),
+  .rst                (reset),
+  .inst               (inst),
+  .rs1_data           (r_data1),
+  .rs2_data           (r_data2),
   
-  .rs1_r_ena        (rs1_r_ena),
-  .rs1_r_addr       (rs1_r_addr),
-  .rs2_r_ena        (rs2_r_ena),
-  .rs2_r_addr       (rs2_r_addr),
-  .rd_w_ena         (rd_w_ena),
-  .rd_w_addr        (rd_w_addr),
-  .inst_type        (inst_type),
-  .inst_opcode      (inst_opcode),
-  .op1              (op1),
-  .op2              (op2)
+  .rs1_r_ena          (rs1_r_ena),
+  .rs1_r_addr         (rs1_r_addr),
+  .rs2_r_ena          (rs2_r_ena),
+  .rs2_r_addr         (rs2_r_addr),
+  .rd_w_ena           (rd_w_ena),
+  .rd_w_addr          (rd_w_addr),
+  .inst_type          (inst_type),
+  .inst_opcode        (inst_opcode),
+  .op1                (op1),
+  .op2                (op2)
 );
 
 exe_stage Exe_stage(
-  .rst              (reset),
-  .inst_type_i      (inst_type),
-  .inst_opcode      (inst_opcode),
-  .op1              (op1),
-  .op2              (op2),
+  .rst                (reset),
+  .inst_type_i        (inst_type),
+  .inst_opcode        (inst_opcode),
+  .op1                (op1),
+  .op2                (op2),
   
-  .inst_type_o      (inst_type_o),
-  .rd_data          (rd_data)
+  .inst_type_o        (inst_type_o),
+  .rd_data            (rd_data)
 );
 
 regfile Regfile(
-  .clk              (clock),
-  .rst              (reset),
-  .w_addr           (rd_w_addr),
-  .w_data           (rd_data),
-  .w_ena            (rd_w_ena),
+  .clk                (clock),
+  .rst                (reset),
+  .w_addr             (rd_w_addr),
+  .w_data             (rd_data),
+  .w_ena              (rd_w_ena),
   
-  .r_addr1          (rs1_r_addr),
-  .r_data1          (r_data1),
-  .r_ena1           (rs1_r_ena),
-  .r_addr2          (rs2_r_addr),
-  .r_data2          (r_data2),
-  .r_ena2           (rs2_r_ena),
+  .r_addr1            (rs1_r_addr),
+  .r_data1            (r_data1),
+  .r_ena1             (rs1_r_ena),
+  .r_addr2            (rs2_r_addr),
+  .r_data2            (r_data2),
+  .r_ena2             (rs2_r_ena),
 
-  .regs_o           (regs)
+  .regs_o             (regs)
 );
 
 
 // Difftest
 reg cmt_wen;
-reg [7:0]cmt_wdest;
+reg [7:0] cmt_wdest;
 reg [`REG_BUS] cmt_wdata;
 reg [`REG_BUS] cmt_pc;
-reg [31:0]cmt_inst;
-reg vaild;
-reg skip;
+reg [31:0] cmt_inst;
+reg cmt_valid;
+reg trap;
+reg [7:0] trap_code;
 reg [63:0] cycleCnt;
 reg [63:0] instrCnt;
+reg [`REG_BUS] regs_diff [0 : 31];
 
-always @(posedge clock) begin
+
+always @(negedge clock) begin
   if (reset) begin
-    {cmt_wen, cmt_wdest, cmt_wdata, cmt_pc, cmt_inst, vaild, cycleCnt, instrCnt} = 0;
+    {cmt_wen, cmt_wdest, cmt_wdata, cmt_pc, cmt_inst, cmt_valid, trap, trap_code, cycleCnt, instrCnt} = 0;
   end
-  else begin
+  else if (~trap) begin
     cmt_wen = rd_w_ena;
     cmt_wdest = {3'd0, rd_w_addr};
     cmt_wdata = rd_data;
     cmt_pc = pc;
     cmt_inst = inst;
-    vaild = 1'd1;
+    cmt_valid = (pc != `PC_START) | (inst != 32'h0000_0000);
 
-    // Skip comparison of the first instruction
-    // Because the result required to commit cannot be calculated in time before first InstrCommit during verilator simulation
-    // Maybe you can avoid it in pipeline
-    skip = pc == `PC_START;
-    
+		regs_diff = regs;
+
+    trap = inst[6:0] == 7'h6b;
+    trap_code = regs_diff[10][7:0];
     cycleCnt += 1;
-    instrCnt += 1;
+    instrCnt += cmt_valid;
   end
 end
 
@@ -156,10 +144,10 @@ DifftestInstrCommit DifftestInstrCommit(
   .clock              (clock),
   .coreid             (0),
   .index              (0),
-  .valid              (vaild),
+  .valid              (cmt_valid),
   .pc                 (cmt_pc),
   .instr              (cmt_inst),
-  .skip               (skip),
+  .skip               (0),
   .isRVC              (0),
   .scFailed           (0),
   .wen                (cmt_wen),
@@ -170,45 +158,45 @@ DifftestInstrCommit DifftestInstrCommit(
 DifftestArchIntRegState DifftestArchIntRegState (
   .clock              (clock),
   .coreid             (0),
-  .gpr_0              (regs[0]),
-  .gpr_1              (regs[1]),
-  .gpr_2              (regs[2]),
-  .gpr_3              (regs[3]),
-  .gpr_4              (regs[4]),
-  .gpr_5              (regs[5]),
-  .gpr_6              (regs[6]),
-  .gpr_7              (regs[7]),
-  .gpr_8              (regs[8]),
-  .gpr_9              (regs[9]),
-  .gpr_10             (regs[10]),
-  .gpr_11             (regs[11]),
-  .gpr_12             (regs[12]),
-  .gpr_13             (regs[13]),
-  .gpr_14             (regs[14]),
-  .gpr_15             (regs[15]),
-  .gpr_16             (regs[16]),
-  .gpr_17             (regs[17]),
-  .gpr_18             (regs[18]),
-  .gpr_19             (regs[19]),
-  .gpr_20             (regs[20]),
-  .gpr_21             (regs[21]),
-  .gpr_22             (regs[22]),
-  .gpr_23             (regs[23]),
-  .gpr_24             (regs[24]),
-  .gpr_25             (regs[25]),
-  .gpr_26             (regs[26]),
-  .gpr_27             (regs[27]),
-  .gpr_28             (regs[28]),
-  .gpr_29             (regs[29]),
-  .gpr_30             (regs[30]),
-  .gpr_31             (regs[31])
+  .gpr_0              (regs_diff[0]),
+  .gpr_1              (regs_diff[1]),
+  .gpr_2              (regs_diff[2]),
+  .gpr_3              (regs_diff[3]),
+  .gpr_4              (regs_diff[4]),
+  .gpr_5              (regs_diff[5]),
+  .gpr_6              (regs_diff[6]),
+  .gpr_7              (regs_diff[7]),
+  .gpr_8              (regs_diff[8]),
+  .gpr_9              (regs_diff[9]),
+  .gpr_10             (regs_diff[10]),
+  .gpr_11             (regs_diff[11]),
+  .gpr_12             (regs_diff[12]),
+  .gpr_13             (regs_diff[13]),
+  .gpr_14             (regs_diff[14]),
+  .gpr_15             (regs_diff[15]),
+  .gpr_16             (regs_diff[16]),
+  .gpr_17             (regs_diff[17]),
+  .gpr_18             (regs_diff[18]),
+  .gpr_19             (regs_diff[19]),
+  .gpr_20             (regs_diff[20]),
+  .gpr_21             (regs_diff[21]),
+  .gpr_22             (regs_diff[22]),
+  .gpr_23             (regs_diff[23]),
+  .gpr_24             (regs_diff[24]),
+  .gpr_25             (regs_diff[25]),
+  .gpr_26             (regs_diff[26]),
+  .gpr_27             (regs_diff[27]),
+  .gpr_28             (regs_diff[28]),
+  .gpr_29             (regs_diff[29]),
+  .gpr_30             (regs_diff[30]),
+  .gpr_31             (regs_diff[31])
 );
 
 DifftestTrapEvent DifftestTrapEvent(
   .clock              (clock),
   .coreid             (0),
-  .valid              (inst[6:0] == 7'h6b),
-  .code               (regs[10][7:0]),
+  .valid              (trap),
+  .code               (trap_code),
   .pc                 (cmt_pc),
   .cycleCnt           (cycleCnt),
   .instrCnt           (instrCnt)
