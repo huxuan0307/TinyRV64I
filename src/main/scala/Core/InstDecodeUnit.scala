@@ -33,8 +33,8 @@ class InstDecodeUnit extends Module with HasRs1Type with HasRs2Type with CoreCon
 //  private val tmp = Cat(inst(31, 12), 0.U(12.W))
 
   // data
-  io.out.rs1Data      := DontCare
-  io.out.rs2Data      := MuxLookup(instType, 0.U, List(
+  io.out.rs1_data      := DontCare
+  io.out.rs2_data      := MuxLookup(instType, 0.U, List(
       InstU -> sext(XLEN, Cat(inst(31, 12), 0.U(12.W))),
       InstJ -> sext(XLEN, Cat(inst(31), inst(19,12), inst(20), inst(30,21), 0.U(1.W))),
       InstB -> sext(XLEN, Cat(inst(31), inst(7), inst(30,25), inst(11,8), 0.U(1.W))),
@@ -42,7 +42,7 @@ class InstDecodeUnit extends Module with HasRs1Type with HasRs2Type with CoreCon
       InstS -> sext(XLEN, Cat(inst(31,25), inst(11,7)))
   ))
 
-  io.out.rd           := DontCare
-  io.out.pc           := DontCare
+  io.out.rd_data           := DontCare
+  io.out.pc           := io.in.pc
   io.illegal          := instType === InstN
 }

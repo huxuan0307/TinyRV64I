@@ -8,11 +8,14 @@ object LsuOp {
   val LB  :UInt  = "b0000".U
   val LH  :UInt  = "b0001".U
   val LW  :UInt  = "b0010".U
+  val LD  :UInt  = "b0011".U
   val LBU :UInt  = "b0100".U
   val LHU :UInt  = "b0101".U
+  val LWU :UInt  = "b0110".U
   val SB  :UInt  = "b1000".U
   val SH  :UInt  = "b1001".U
   val SW  :UInt  = "b1010".U
+  val SD  :UInt  = "b1011".U
 }
 
 class LoadStoreUnitInPort extends Bundle with CoreConfig with HasFullOpType {
@@ -43,19 +46,23 @@ class LoadStoreUnit extends Module with CoreConfig with HasMemDataType {
     LsuOp.LB -> sext(XLEN, io.dmem.rdata(7, 0)),
     LsuOp.LH -> sext(XLEN, io.dmem.rdata(15,0)),
     LsuOp.LW -> sext(XLEN, io.dmem.rdata(31,0)),
+    LsuOp.LD -> sext(XLEN, io.dmem.rdata(63,0)),
     LsuOp.LBU-> zext(XLEN, io.dmem.rdata(7, 0)),
-    LsuOp.LHU-> zext(XLEN, io.dmem.rdata(15,0))
+    LsuOp.LHU-> zext(XLEN, io.dmem.rdata(15,0)),
+    LsuOp.LWU-> zext(XLEN, io.dmem.rdata(31,0))
   ))
   io.dmem.wdata := Mux(io.in.ena, MuxLookup(io.in.op_type, 0.U(DATA_WIDTH), Array(
     // How to save byte or half word? It's none of my business...
     LsuOp.SB -> zext(XLEN, io.in.data(7, 0)),
     LsuOp.SH -> zext(XLEN, io.in.data(15,0)),
-    LsuOp.SW -> zext(XLEN, io.in.data(31,0))
+    LsuOp.SW -> zext(XLEN, io.in.data(31,0)),
+    LsuOp.SD -> zext(XLEN, io.in.data(63,0))
   )),0.U(DATA_WIDTH))
-  io.dmem.data_type := MuxLookup(io.in.op_type, type_w, Array(
+  io.dmem.data_type := MuxLookup(io.in.op_type, type_d, Array(
     LsuOp.SB -> type_b,
     LsuOp.SH -> type_h,
-    LsuOp.SW -> type_w
+    LsuOp.SW -> type_w,
+    LsuOp.SD -> type_d
   ))
   io.dmem.debug.addr := DontCare
 }

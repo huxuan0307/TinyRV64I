@@ -41,5 +41,11 @@ class BranchUnit extends Module {
     BruOp.JAL -> true.B,
     BruOp.JALR -> true.B
   ))
-  io.out.new_pc := io.in.pc + io.in.offset
+  // B-Type and jal: pc + offset
+  // jalr: x[rs1] + offset
+  io.out.new_pc := Mux(
+    io.in.op_type =/= BruOp.JALR,
+    io.in.pc + io.in.offset,
+    io.in.op_num1 + io.in.offset
+  )
 }

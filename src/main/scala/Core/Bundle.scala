@@ -4,9 +4,9 @@ import chisel3._
 import chisel3.util._
 
 trait DataPathIO extends Bundle with CoreConfig {
-  val rs1Data: UInt = Output(UInt(DATA_WIDTH))
-  val rs2Data: UInt = Output(UInt(DATA_WIDTH))
-  val rd : UInt = Output(UInt(DATA_WIDTH))
+  val rs1_data: UInt = Output(UInt(DATA_WIDTH))
+  val rs2_data: UInt = Output(UInt(DATA_WIDTH))
+  val rd_data : UInt = Output(UInt(DATA_WIDTH))
 }
 
 trait DecodeConst extends HasRs1Type with HasRs2Type with HasFuncType with HasFullOpType

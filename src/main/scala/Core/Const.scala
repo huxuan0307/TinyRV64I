@@ -57,6 +57,6 @@ trait HasRs2Type {
 
 trait HasMemDataType {
   protected val MemDataTypeSize = 4
-  val type_b :: type_h :: type_w :: type_dw :: Nil = Enum(MemDataTypeSize)
+  val type_b :: type_h :: type_w :: type_d :: Nil = Enum(MemDataTypeSize)
   protected val MemDataTypeWidth: Width = log2Up(MemDataTypeSize).W
 }

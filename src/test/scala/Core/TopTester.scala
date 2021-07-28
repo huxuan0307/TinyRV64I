@@ -17,7 +17,7 @@ import java.nio.channels.FileChannel
 
 class TopTester extends FreeSpec with ChiselScalatestTester with PcInit {
   def show_regfile(top: Top) : Unit = {
-    for (i <- 0 to 7) {
+    for (i <- 0 to 11) {
       top.io.debug.addr.poke(i.U)
       val reg = top.io.debug.data.peek().litValue()
       println(f"rf[$i%2d] : $reg%08x")
@@ -26,8 +26,10 @@ class TopTester extends FreeSpec with ChiselScalatestTester with PcInit {
   "Top test" in {
     test(new Top).withAnnotations(Seq(WriteVcdAnnotation)) {
       top =>
-        val imgPath = "z:/home/huxuan/repo/am-kernels/tests/cpu-tests/single_tests/asm/shift.bin"
-        val memSize = 4*1024*1024
+//        val imgPath = "z:/home/huxuan/repo/am-kernels/tests/cpu-tests/single_tests/asm/shift.bin"
+        val imgPath = "z:/home/huxuan/repo/am-kernels/tests/cpu-tests/build/dummy-riscv64-mycpu.bin"
+
+        val memSize = 256*1024*1024
         val mem = {
           if (imgPath=="") {
             val mem = Array.fill((pc_init / 4).toInt)(0) ++ Array(
@@ -47,6 +49,7 @@ class TopTester extends FreeSpec with ChiselScalatestTester with PcInit {
           }
         }
         var pc = 0
+        val last_pc = 0
         var ill_inst = 0
         var instr = 0L
         do {
@@ -63,7 +66,7 @@ class TopTester extends FreeSpec with ChiselScalatestTester with PcInit {
 //          val alu_a = top.data_path.io.to_exu.op_num1.peek().litValue().toInt
 //          val alu_b = top.data_path.io.to_exu.op_num2.peek().litValue().toInt
 //          println(f"alu a: $alu_a%08x, b: $alu_b%08x")
-        } while (ill_inst == 0)
+        } while (ill_inst == 0 && pc != top.io.imem.addr.peek().litValue().toInt)
         println(f"ill_inst: $instr%08x as pc: $pc%08x")
 
         fork {

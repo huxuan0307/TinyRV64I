@@ -50,27 +50,39 @@ class DataMem extends Mem {
   val io : DMemIO = IO(new DMemIO)
   val data : chisel3.Mem[UInt] = Mem(DMEM_SIZE, UInt(MEM_DATA_WIDTH))
   private val addr = Wire(UInt(8.W))
-  addr := io.addr(7,0)
+  addr := io.addr(7,3)
 //  io.rdata := 0.U
   io.rdata := Cat(
-    data(addr + 0.U(2.W)),
-    data(addr + 1.U(2.W)),
-    data(addr + 2.U(2.W)),
-    data(addr + 3.U(2.W))
+    data(Cat(addr, 0.U(3.W))),
+    data(Cat(addr, 1.U(3.W))),
+    data(Cat(addr, 2.U(3.W))),
+    data(Cat(addr, 3.U(3.W))),
+    data(Cat(addr, 4.U(3.W))),
+    data(Cat(addr, 5.U(3.W))),
+    data(Cat(addr, 6.U(3.W))),
+    data(Cat(addr, 7.U(3.W))),
   )
   when(io.wena) {
-    data(addr + 0.U(2.W)) := io.wdata(31, 24)
-    data(addr + 1.U(2.W)) := io.wdata(23, 16)
-    data(addr + 2.U(2.W)) := io.wdata(15,  8)
-    data(addr + 3.U(2.W)) := io.wdata( 7,  0)
+    data(Cat(addr, 0.U(3.W))) := io.wdata(63, 56)
+    data(Cat(addr, 1.U(3.W))) := io.wdata(55, 48)
+    data(Cat(addr, 2.U(3.W))) := io.wdata(47, 40)
+    data(Cat(addr, 3.U(3.W))) := io.wdata(39, 32)
+    data(Cat(addr, 4.U(3.W))) := io.wdata(31, 24)
+    data(Cat(addr, 5.U(3.W))) := io.wdata(23, 16)
+    data(Cat(addr, 6.U(3.W))) := io.wdata(15,  8)
+    data(Cat(addr, 7.U(3.W))) := io.wdata( 7,  0)
   }
   private val debug_addr = Wire(UInt(8.W))
-  debug_addr := io.debug.addr(7,0)
+  debug_addr := io.debug.addr(7,3)
   io.debug.data := Cat(
-    data(debug_addr),
-    data(debug_addr + 1.U(2.W)),
-    data(debug_addr + 2.U(2.W)),
-    data(debug_addr + 3.U(2.W))
+    data(Cat(debug_addr, 0.U(3.W))),
+    data(Cat(debug_addr, 1.U(3.W))),
+    data(Cat(debug_addr, 2.U(3.W))),
+    data(Cat(debug_addr, 3.U(3.W))),
+    data(Cat(debug_addr, 4.U(3.W))),
+    data(Cat(debug_addr, 5.U(3.W))),
+    data(Cat(debug_addr, 6.U(3.W))),
+    data(Cat(debug_addr, 7.U(3.W))),
   )
 
 }

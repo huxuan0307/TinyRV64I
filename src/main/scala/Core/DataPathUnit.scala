@@ -25,7 +25,7 @@ class DataPathUnit extends Module with HasRs1Type with HasRs2Type {
   ))
   io.to_exu.op_num2   := MuxLookup(io.from_idu.rs2Type, 0.U, List(
     Rs2Reg -> rf.io.r2.data,
-    Rs2Imm -> io.from_idu.rs2Data
+    Rs2Imm -> io.from_idu.rs2_data
   ))
   io.to_exu.op_type   := io.from_idu.opType
   io.to_exu.func_type := io.from_idu.funcType

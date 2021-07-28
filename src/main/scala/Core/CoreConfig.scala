@@ -5,9 +5,9 @@ import chisel3.internal.firrtl.Width
 import chisel3.util.log2Up
 
 trait CoreConfig {
-  protected def XLEN  = 32
+  protected def XLEN  = 64
   protected def INST_WIDTH: Width = 32.W
-  protected def ADDR_WIDTH: Width = 32.W
+  protected def ADDR_WIDTH: Width = XLEN.W
   protected def DATA_WIDTH: Width = XLEN.W
   // 按Byte编址
   protected def MEM_DATA_WIDTH : Width = 8.W

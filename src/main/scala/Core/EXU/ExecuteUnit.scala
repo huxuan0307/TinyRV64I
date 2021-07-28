@@ -41,11 +41,11 @@ class ExecuteUnit extends Module with HasFuncType with CoreConfig {
   lsu.io.in.data    := io.in.w.data
   lsu.io.in.op_type := io.in.op_type
   lsu.io.in.ena     := io.in.func_type === FuncLSU
-  bru.io.in.op_num1 := io.in.op_num1
-  bru.io.in.op_num2 := io.in.w.data
+  bru.io.in.op_num1 := io.in.op_num1// jalr:   x[rs1]
+  bru.io.in.op_num2 := io.in.w.data // B-Type: x[rs2]
   bru.io.in.op_type := io.in.op_type
   bru.io.in.pc      := io.in.pc
-  bru.io.in.offset  := io.in.op_num2
+  bru.io.in.offset  := io.in.op_num2// imm
   bru.io.in.ena     := io.in.func_type === FuncBRU
 
   io.out.w.data := MuxLookup(io.in.func_type, 0.U(XLEN.W), Array(

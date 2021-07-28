@@ -1,6 +1,6 @@
 package Core.ISA.RV32I
 
-import Core.Inst
+import Core.ISA.Inst
 import chisel3.util.BitPat
 
 object InstI extends Inst {

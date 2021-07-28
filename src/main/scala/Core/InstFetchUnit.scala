@@ -9,7 +9,7 @@ class InstFetchUnitIO extends Bundle {
 }
 
 trait PcInit {
-  val pc_init = 0x00010000L
+  val pc_init = 0x01000000L
 }
 
 class InstFetchUnit extends Module with PcInit with CoreConfig with HasMemDataType {
