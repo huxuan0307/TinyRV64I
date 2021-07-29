@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="1.6"
+VERSION="1.7"
 
 help() {
     echo "Version v"$VERSION
@@ -54,19 +54,28 @@ build_proj() {
     cd $PROJECT_PATH
 
     # get all .cpp files
-    CPP_SRC=`find $PROJECT_PATH/$CSRC_FOLDER -name "*.cpp"`
-    
-    # get all rtl subfolders
-    VSRC_FOLDER=`find $VSRC_FOLDER -type d`
-    for SUBFOLDER in ${VSRC_FOLDER[@]}
+    CSRC_LIST=`find $PROJECT_PATH/$CSRC_FOLDER -name "*.cpp"`
+    for CSRC_FILE in ${CSRC_LIST[@]}
     do
-        INCLUDE_RTL_SRC_FOLDER="$INCLUDE_RTL_SRC_FOLDER -I$SUBFOLDER"
+        CSRC_FILES="$CSRC_FILES $CSRC_FILE"
+    done
+    # get all vsrc subfolders
+    VSRC_SUB_FOLDER=`find $VSRC_FOLDER -type d`
+    for SUBFOLDER in ${VSRC_SUB_FOLDER[@]}
+    do
+        INCLUDE_VSRC_FOLDERS="$INCLUDE_VSRC_FOLDERS -I$SUBFOLDER"
+    done
+    # get all csrc subfolders
+    CSRC_SUB_FOLDER=`find $PROJECT_PATH/$CSRC_FOLDER -type d`
+    for SUBFOLDER in ${CSRC_SUB_FOLDER[@]}
+    do
+        INCLUDE_CSRC_FOLDERS="$INCLUDE_CSRC_FOLDERS -I$SUBFOLDER"
     done
 
     # compile
     mkdir $BUILD_FOLDER 1>/dev/null 2>&1
-    eval "verilator --unused-regexp -Wall --cc --exe --trace -O3 $CFLAGS $LDFLAGS -o $PROJECT_PATH/$BUILD_FOLDER/$EMU_FILE \
-        -Mdir $PROJECT_PATH/$BUILD_FOLDER/"emu-compile" $INCLUDE_RTL_SRC_FOLDER --build $V_TOP_FILE $CPP_SRC"
+    eval "verilator --cc --exe --trace --assert -O3 -CFLAGS \"-std=c++11 -Wall $INCLUDE_CSRC_FOLDERS $CFLAGS\" $LDFLAGS -o $PROJECT_PATH/$BUILD_FOLDER/$EMU_FILE \
+        -Mdir $PROJECT_PATH/$BUILD_FOLDER/emu-compile $INCLUDE_VSRC_FOLDERS --build $V_TOP_FILE $CSRC_FILES"
     if [ $? -ne 0 ]; then
         echo "Failed to run verilator!!!"
         exit 1
@@ -121,9 +130,6 @@ while getopts 'he:bt:sa:f:l:gwcdm:' OPT; do
     esac
 done
 
-if [[ $CFLAGS ]]; then
-    CFLAGS="-CFLAGS "\"$CFLAGS\"
-fi
 if [[ $LDFLAGS ]]; then
     LDFLAGS="-LDFLAGS "\"$LDFLAGS\"
 fi
