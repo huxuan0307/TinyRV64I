@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="1.5"
+VERSION="1.6"
 
 help() {
     echo "Version v"$VERSION
@@ -93,7 +93,7 @@ CLEAN="false"
 PARAMETERS=
 CFLAGS=
 LDFLAGS=
-GBD="false"
+GDB="false"
 DIFFTEST="false"
 DIFFTEST_FOLDER="difftest"
 DIFFTEST_TOP_FILE="SimTop.v"
@@ -112,7 +112,7 @@ while getopts 'he:bt:sa:f:l:gwcdm:' OPT; do
         a) PARAMETERS="$OPTARG";;
         f) CFLAGS="$OPTARG";;
         l) LDFLAGS="$OPTARG";;
-        g) GBD="true";;
+        g) GDB="true";;
         w) CHECK_WAVE="true";;
         c) CLEAN="true";;
         d) DIFFTEST="true";;
@@ -121,10 +121,10 @@ while getopts 'he:bt:sa:f:l:gwcdm:' OPT; do
     esac
 done
 
-if [[ $LDFLAGS ]]; then
+if [[ $CFLAGS ]]; then
     CFLAGS="-CFLAGS "\"$CFLAGS\"
 fi
-if [[ $CFLAGS ]]; then
+if [[ $LDFLAGS ]]; then
     LDFLAGS="-LDFLAGS "\"$LDFLAGS\"
 fi
 
@@ -174,7 +174,7 @@ if [[ "$SIMULATE" == "true" ]]; then
 
     # run simulation program
     echo "Simulating..."
-    if [[ "$GBD" == "true" ]]; then
+    if [[ "$GDB" == "true" ]]; then
         gdb -s $EMU_FILE --args ./$EMU_FILE $PARAMETERS
     else
         ./$EMU_FILE $PARAMETERS
