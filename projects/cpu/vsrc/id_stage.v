@@ -1,6 +1,4 @@
 
-/* verilator lint_off UNDRIVEN */
-/* verilator lint_off UNUSED */
 //--xuezhen--
 
 `include "defines.v"

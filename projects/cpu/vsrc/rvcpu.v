@@ -1,5 +1,4 @@
 
-/* verilator lint_off UNUSED */
 //--xuezhen--
 
 `timescale 1ns / 1ps

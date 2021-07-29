@@ -118,25 +118,26 @@ reg [63:0] cycleCnt;
 reg [63:0] instrCnt;
 reg [`REG_BUS] regs_diff [0 : 31];
 
+wire inst_valid = (pc != `PC_START) | (inst != 0);
 
 always @(negedge clock) begin
   if (reset) begin
-    {cmt_wen, cmt_wdest, cmt_wdata, cmt_pc, cmt_inst, cmt_valid, trap, trap_code, cycleCnt, instrCnt} = 0;
+    {cmt_wen, cmt_wdest, cmt_wdata, cmt_pc, cmt_inst, cmt_valid, trap, trap_code, cycleCnt, instrCnt} <= 0;
   end
   else if (~trap) begin
-    cmt_wen = rd_w_ena;
-    cmt_wdest = {3'd0, rd_w_addr};
-    cmt_wdata = rd_data;
-    cmt_pc = pc;
-    cmt_inst = inst;
-    cmt_valid = (pc != `PC_START) | (inst != 32'h0000_0000);
+    cmt_wen <= rd_w_ena;
+    cmt_wdest <= {3'd0, rd_w_addr};
+    cmt_wdata <= rd_data;
+    cmt_pc <= pc;
+    cmt_inst <= inst;
+    cmt_valid <= inst_valid;
 
-		regs_diff = regs;
+		regs_diff <= regs;
 
-    trap = inst[6:0] == 7'h6b;
-    trap_code = regs_diff[10][7:0];
-    cycleCnt += 1;
-    instrCnt += cmt_valid;
+    trap <= inst[6:0] == 7'h6b;
+    trap_code <= regs[10][7:0];
+    cycleCnt <= cycleCnt + 1;
+    instrCnt <= instrCnt + inst_valid;
   end
 end
 

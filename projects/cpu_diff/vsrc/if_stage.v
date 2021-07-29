@@ -1,5 +1,4 @@
 
-/* verilator lint_off UNUSED */
 //--xuezhen--
 
 `include "defines.v"
@@ -13,20 +12,18 @@ module if_stage(
   output reg [31 : 0] inst
 );
 
-reg [`REG_BUS] next_pc;
+parameter PC_START_RESET = `PC_START - 4;
 
 // fetch an instruction
 always@( posedge clk )
 begin
   if( rst == 1'b1 )
   begin
-    pc = `PC_START;
-    next_pc = `PC_START;
+    pc <= PC_START_RESET;
   end
   else
   begin
-    pc = next_pc;
-    next_pc = next_pc + 4;
+    pc <= pc + 4;
   end
 end
 
