@@ -8,7 +8,7 @@ ThisBuild / crossScalaVersions := Seq("2.11.12", "2.12.13")
 
 lazy val root = (project in file("."))
   .settings(
-    name := "TinyRV32I",
+    name := "TinyRV64I",
     libraryDependencies ++= Seq(
       "edu.berkeley.cs" %% "chisel3" % "3.4.3",
       "edu.berkeley.cs" %% "chiseltest" % "0.3.3" % "test",
