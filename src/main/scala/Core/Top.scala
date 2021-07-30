@@ -1,6 +1,7 @@
 package Core
 
 import Core.Bundles.RegfileDebugIO
+import Core.DiffTest.DiffTestIO
 import Core.EXU.ExecuteUnit
 import chisel3._
 
@@ -9,6 +10,7 @@ class TopIO extends Bundle {
   val dmem : DMemIO = Flipped(new DMemIO)
   val ill_inst : Bool = Output(Bool())
   val debug = new RegfileDebugIO
+  val diffTest = new DiffTestIO
 }
 
 class Top extends Module {
@@ -30,4 +32,10 @@ class Top extends Module {
   io.ill_inst           := idu.io.illegal
   io.debug              <> data_path.io.debug
   ifu.io.branch         <> exu.io.branch
+  io.diffTest.commit    := withClock(clock){
+    ~reset.asBool()
+  }
+  io.diffTest.reg       <> data_path.io.diffTest.reg
+  io.diffTest.wreg      <> wbu.io.out
+
 }

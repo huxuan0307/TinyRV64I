@@ -4,7 +4,7 @@ import Core.Bundles.RegfileIO
 import chisel3._
 
 class RegfileImpl extends CoreConfig {
-  val regfile: chisel3.Mem[UInt] = Mem(REG_NUM, UInt(DATA_WIDTH))
+  val regfile = RegInit(VecInit(Seq.fill(REG_NUM)(0.U(XLEN.W))))
 
   def write(addr: UInt, data: UInt): Unit = {
     when(addr =/= 0.U) {
