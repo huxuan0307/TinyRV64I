@@ -29,7 +29,7 @@ class SimTop extends Module with CoreConfig with HasMemDataType {
   rom.io.clk := clock
   rom.io.en  := true.B
   rom.io.rIdx := rvcore.io.imem.addr - (BigInt("80000000", 16)>>3).U
-  rvcore.io.imem.rdata := Mux(rom.io.rIdx(2), ram.io.rdata(63,32), ram.io.rdata(31,0))
+  rvcore.io.imem.rdata := Mux(rom.io.rIdx(2), rom.io.rdata(63,32), rom.io.rdata(31,0))
   // dmem
   val wdata = rvcore.io.dmem.wdata
   val offset = rvcore.io.dmem.addr(2,0)

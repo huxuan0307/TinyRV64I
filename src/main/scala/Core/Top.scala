@@ -32,7 +32,7 @@ class Top extends Module {
   io.ill_inst           := idu.io.illegal
   io.debug              <> data_path.io.debug
   ifu.io.branch         <> exu.io.branch
-  io.diffTest.commit    <> ~wbu.io.out.ena    // todo: check if posedge or negedge
+  io.diffTest.commit    := wbu.io.out.ena
   io.diffTest.reg       <> data_path.io.diffTest.reg
   io.diffTest.wreg      <> data_path.io.diffTest.wreg
 }
