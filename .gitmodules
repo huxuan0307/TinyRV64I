@@ -1,0 +1,6 @@
+[submodule "ThirdParty/NEMU"]
+	path = ThirdParty/NEMU
+	url = https://hub.fastgit.org/huxuan0307/NEMU.git
+[submodule "ThirdParty/difftest"]
+	path = ThirdParty/difftest
+	url = https://hub.fastgit.org/huxuan0307/difftest.git
