@@ -17,7 +17,7 @@ class RegfileReadPortIO extends Bundle with Core.CoreConfig {
 class RegfileDebugIO extends RegfileReadPortIO
 
 class RegfileWritePortIO extends Bundle with Core.CoreConfig {
-  val ena: UInt = Input(UInt(1.W))
+  val ena: Bool = Input(Bool())
   val addr: UInt = Input(UInt(REG_ADDR_WIDTH))
   val data: UInt = Input(UInt(DATA_WIDTH))
 }
