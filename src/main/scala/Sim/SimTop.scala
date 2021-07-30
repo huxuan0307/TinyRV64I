@@ -21,15 +21,15 @@ class SimTop extends Module with CoreConfig with HasMemDataType {
   io.uart.out.ch  := 0.U
   val rvcore : Top = Module(new Top)
 
-  val ram = Module(new RAMHelper)
-  val rom = Module(new ROMHelper)
+  val data_ram = Module(new RAMHelper)
+  val inst_rom = Module(new ROMHelper)
 
 
   // imem
-  rom.io.clk := clock
-  rom.io.en  := true.B
-  rom.io.rIdx := rvcore.io.imem.addr - (BigInt("80000000", 16)>>3).U
-  rvcore.io.imem.rdata := Mux(rom.io.rIdx(2), rom.io.rdata(63,32), rom.io.rdata(31,0))
+  inst_rom.io.clk := clock
+  inst_rom.io.en  := true.B
+  inst_rom.io.rIdx := rvcore.io.imem.addr - (BigInt("80000000", 16)>>3).U
+  rvcore.io.imem.rdata := Mux(inst_rom.io.rIdx(2), inst_rom.io.rdata(63,32), inst_rom.io.rdata(31,0))
   // dmem
   val wdata = rvcore.io.dmem.wdata
   val offset = rvcore.io.dmem.addr(2,0)
@@ -40,15 +40,15 @@ class SimTop extends Module with CoreConfig with HasMemDataType {
   ))
   val wdata_align = wdata << (offset * 8.U) // offset*8
   val mask_align = mask << (offset * 8.U)
-  ram.io.clk  := clock
-  ram.io.en   := rvcore.io.dmem.valid
-  ram.io.rIdx := rvcore.io.dmem.addr - (BigInt("80000000", 16)>>3).U
-  rvcore.io.dmem.rdata := ram.io.rdata
-  ram.io.wIdx := rvcore.io.dmem.addr - (BigInt("80000000", 16)>>3).U
-  ram.io.wdata := wdata_align
+  data_ram.io.clk  := clock
+  data_ram.io.en   := rvcore.io.dmem.valid
+  data_ram.io.rIdx := rvcore.io.dmem.addr - (BigInt("80000000", 16)>>3).U
+  rvcore.io.dmem.rdata := data_ram.io.rdata
+  data_ram.io.wIdx := rvcore.io.dmem.addr - (BigInt("80000000", 16)>>3).U
+  data_ram.io.wdata := wdata_align
   // todo: check it
-  ram.io.wmask := mask_align
-  ram.io.wen   := rvcore.io.dmem.wena
+  data_ram.io.wmask := mask_align
+  data_ram.io.wen   := rvcore.io.dmem.wena
 
   rvcore.io.dmem.debug.data := 0.U
 
@@ -70,10 +70,10 @@ class SimTop extends Module with CoreConfig with HasMemDataType {
   instrCommit.io.wdata := RegNext(rvcore.io.diffTest.wreg.data)
   instrCommit.io.wdest := RegNext(rvcore.io.diffTest.wreg.addr)
 
-  val regfileCommit = Module(new DifftestArchIntRegState)
-  regfileCommit.io.clock := clock
-  regfileCommit.io.coreid := 0.U
-  regfileCommit.io.gpr := RegNext(rvcore.io.diffTest.reg)
+//  val regfileCommit = Module(new DifftestArchIntRegState)
+//  regfileCommit.io.clock := clock
+//  regfileCommit.io.coreid := 0.U
+//  regfileCommit.io.gpr := RegNext(rvcore.io.diffTest.reg)
 
 }
 
