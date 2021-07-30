@@ -21,4 +21,4 @@
 **/difftest
 !difftest
 !NEMU
-myinfo.txt
+../myinfo.txt
