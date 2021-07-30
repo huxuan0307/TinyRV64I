@@ -3,7 +3,7 @@
 /.bsp/
 /target/
 /test_run_dir/
-
+/build_test/
 ### Project Specific stuff
 test_run_dir/*
 ### XilinxISE template
