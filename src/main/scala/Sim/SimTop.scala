@@ -129,9 +129,9 @@ class SimTop extends Module with CoreConfig with HasMemDataType {
 
   private val cnt_en = Wire(Bool())
   cnt_en := withClock(clock){~reset.asBool()}
-//  val commit_cycle_cnt : UInt = Counter.counter(Int.MaxValue.U, cnt_en, 1.U)
+  val commit_cycle_cnt : UInt = Counter.counter(Int.MaxValue.U, cnt_en, 1.U)
 
-//  private val commit_inst_cnt = Counter.counter(Int.MaxValue.U, cnt_en, inst_valid)
+  private val commit_inst_cnt = Counter.counter(Int.MaxValue.U, cnt_en, inst_valid)
   private val trapEvent = Module(new DifftestTrapEvent)
   trapEvent.io.clock  := clock
   trapEvent.io.coreid := 0.U
