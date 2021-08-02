@@ -17,8 +17,8 @@ class DataPathUnitIO extends Bundle {
 class DataPathUnit extends Module with HasRs1Type with HasRs2Type with CoreConfig {
   val io : DataPathUnitIO = IO(new DataPathUnitIO)
   val rf = new RegfileImpl
-  val rs1Data = rf.read(io.from_idu.rs1Addr)
-  val rs2Data = rf.read(io.from_idu.rs2Addr)
+  private val rs1Data = rf.read(io.from_idu.rs1Addr)
+  private val rs2Data = rf.read(io.from_idu.rs2Addr)
 
   when(io.from_wbu.ena){
     rf.write(io.from_wbu.addr, io.from_wbu.data)
@@ -44,8 +44,8 @@ class DataPathUnit extends Module with HasRs1Type with HasRs2Type with CoreConfi
   io.to_exu.is_word_type := io.from_idu.is_word_type
   io.debug            <> DontCare
   io.diffTest.commit  := DontCare
-
-  io.diffTest.wreg <> io.from_wbu
+  io.diffTest.trap    <> DontCare
+  io.diffTest.wreg    <> io.from_wbu
   // zipWithIndex 按序号压缩，连续的情况下，使用foreach遍历，不连续使用map
   io.diffTest.reg.zipWithIndex.foreach{ case (r, i) => r := rf.read(i.U) }
 

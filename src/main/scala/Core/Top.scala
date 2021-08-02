@@ -37,5 +37,5 @@ class Top extends Module {
   }
   io.diffTest.reg       <> data_path.io.diffTest.reg
   io.diffTest.wreg      <> wbu.io.out
-
+  io.diffTest.trap.valid:= idu.io.is_trap
 }

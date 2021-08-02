@@ -62,7 +62,7 @@ class TopTester extends FreeSpec with ChiselScalatestTester with PcInit with Cor
 
         println(f"SHIFT_MSB: $SHIFT_MSB")
 //        val imgPath = "z:/home/huxuan/repo/am-kernels/tests/cpu-tests/single_tests/asm/add.bin"
-        val imgPath = "z:/home/huxuan/repo/am-kernels/tests/cpu-tests/build/test-riscv64-mycpu.bin"
+        val imgPath = "z:/home/huxuan/repo/am-kernels/tests/cpu-tests/build/leap-year-riscv64-mycpu.bin"
         var numCheck = 0
         val checkAddr = 0x80000010
         val memSize = 256*1024*1024

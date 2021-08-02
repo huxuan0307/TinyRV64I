@@ -19,6 +19,7 @@ help() {
     echo "-c: Delete \"build\" and \"build_test\" folders under the project directory."
     echo "-d: Connect to XiangShan difftest framework."
     echo "-m: Parameters passed to the difftest makefile. For example: -m \"EMU_TRACE=1 EMU_THREADS=4\". Multiple parameters require double quotes."
+    echo "-r: Run all test cases in the $$BIN_SOURCE_PATH directory. This option requires the project to be able to connect to difftest."
     exit 0
 }
 
@@ -92,10 +93,13 @@ MYINFO_FILE=$OSCPU_PATH"/myinfo.txt"
 EMU_FILE="emu"
 PROJECT_FOLDER="cpu"
 BUILD_FOLDER="build_test"
+BUILD_PATH=$OSCPU_PATH"/build"
 DIFF_BUILD_FOLDER="build"
 VSRC_FOLDER="vsrc"
 CSRC_FOLDER="csrc"
-BIN_FOLDER="bin"
+#BIN_FOLDER="bin"
+BIN_SOURCE_PATH="/home/huxuan/repo/am-kernels/tests/cpu-tests/build"
+#BIN_FOLDER="ThirdParty/bin"
 BUILD="false"
 V_TOP_FILE="top.v"
 SIMULATE="false"
@@ -111,9 +115,10 @@ DIFFTEST_TOP_FILE="SimTop.v"
 NEMU_FOLDER="ThirdParty/NEMU"
 DIFFTEST_HELPER_PATH="src/test/vsrc/common"
 DIFFTEST_PARAM=
+RUNALL="false"
 
 # Check parameters
-while getopts 'he:bt:sa:f:l:gwcdm:' OPT; do
+while getopts 'he:bt:sa:f:l:gwcdm:r' OPT; do
     case $OPT in
         h) help;;
         e) PROJECT_FOLDER="$OPTARG";;
@@ -128,16 +133,21 @@ while getopts 'he:bt:sa:f:l:gwcdm:' OPT; do
         c) CLEAN="true";;
         d) DIFFTEST="true";;
         m) DIFFTEST_PARAM="$OPTARG";;
+        r) RUNALL="true";;
         ?) help;;
     esac
 done
+
+if [[ $RUNALL == "true" ]]; then
+    DIFFTEST="true"
+fi
 
 if [[ $LDFLAGS ]]; then
     LDFLAGS="-LDFLAGS "\"$LDFLAGS\"
 fi
 
 PROJECT_PATH=$OSCPU_PATH/projects/$PROJECT_FOLDER
-[[ "$DIFFTEST" == "true" ]] && BUILD_PATH=$PROJECT_PATH/$DIFF_BUILD_FOLDER || BUILD_PATH=$PROJECT_PATH/$BUILD_FOLDER
+
 if [[ "$DIFFTEST" == "true" ]]; then
     V_TOP_FILE=$DIFFTEST_TOP_FILE
     export NEMU_HOME=$OSCPU_PATH/$NEMU_FOLDER
@@ -175,10 +185,11 @@ fi
 
 # Simulate
 if [[ "$SIMULATE" == "true" ]]; then
+    echo $BUILD_PATH
     cd $BUILD_PATH
 
     # create soft link ($BUILD_PATH/*.bin -> $OSCPU_PATH/$BIN_FOLDER/*.bin). Why? Because of laziness!
-    create_soft_link $BUILD_PATH $OSCPU_PATH/$BIN_FOLDER \"*.bin\"
+    create_soft_link $OSCPU_PATH/$DIFF_BUILD_FOLDER $BIN_SOURCE_PATH \"*.bin\"
 
     # run simulation program
     echo "Simulating..."
@@ -209,4 +220,28 @@ fi
 
 if [[ "$FAILED" == "true" ]]; then
     exit 1
+fi
+
+# Run all
+if [[ $RUNALL == "true" ]]; then
+    cd $BUILD_PATH
+    create_soft_link $OSCPU_PATH/$DIFF_BUILD_FOLDER $BIN_SOURCE_PATH \"*.bin\"
+
+    mkdir log 1>/dev/null 2>&1
+    BIN_FILES=`ls *.bin`
+
+    for BIN_FILE in $BIN_FILES; do
+        FILE_NAME=${BIN_FILE%.*}
+        printf "%30s " $FILE_NAME
+        LOG_FILE=log/$FILE_NAME-log.txt
+        ./$EMU_FILE -i $BIN_FILE &> $LOG_FILE
+        if (grep 'HIT GOOD TRAP' $LOG_FILE > /dev/null) then
+            echo -e "\033[1;32mPASS!\033[0m"
+            rm $LOG_FILE
+        else
+            echo -e "\033[1;31mFAIL!\033[0m see $BUILD_PATH/$LOG_FILE for more information"
+        fi
+    done
+
+    cd $OSCPU_PATH
 fi
