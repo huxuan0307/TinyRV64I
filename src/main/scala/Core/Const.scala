@@ -4,9 +4,11 @@ import chisel3._
 import chisel3.internal.firrtl.Width
 import chisel3.util._
 
-trait BasicDefine {
-  protected val Y : UInt = true.B.asUInt()
-  protected val N : UInt = false.B.asUInt()
+object BasicDefine {
+  val Y : UInt = true.B.asUInt()
+  val N : UInt = false.B.asUInt()
+  val ZERO64 : UInt = 0.U(64.W)
+  val ZERO32 : UInt = 0.U(32.W)
 }
 
 trait HasInstType {
@@ -18,11 +20,11 @@ trait HasInstType {
   protected val InstI : UInt  = 4.U
   protected val InstS : UInt  = 5.U
   protected val InstR : UInt  = 6.U
-
+  protected val InstT : UInt  = 7.U // Only for debug trap
 }
 
 trait HasFuncType {
-  protected def FuncTypeSize = 8
+  protected def FuncTypeSize = 16
   protected def FuncNONE      : UInt  = 0.U
   protected def FuncALU       : UInt  = 1.U
   protected def FuncBRU       : UInt  = 2.U
@@ -31,6 +33,7 @@ trait HasFuncType {
   protected def FuncDIVU      : UInt  = 5.U
   protected def FuncSYSU      : UInt  = 6.U
   protected def FuncCSRU      : UInt  = 7.U
+  protected def FuncTrapU     : UInt  = 8.U
   protected def FuncTypeWidth : Width = log2Up(FuncTypeSize).W
 }
 

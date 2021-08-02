@@ -3,6 +3,7 @@ package Core
 import Core.EXU.{LsuOp, AluOp, BruOp}
 import chisel3._
 import ISA.RV64I._
+import ISA.Trap._
 
 import chisel3.util.BitPat
 
@@ -11,13 +12,13 @@ object Decode
     with HasInstType
     with HasRs1Type
     with HasRs2Type
-    with BasicDefine
 {
+  import Core.BasicDefine._
   private val NoneOp : UInt = "b0000".U
 
   //                                                    rd_enable
   //                      | Inst | Func   |     Op    |
-  val DecodeDefault : List[UInt] = List( InstN, FuncALU, AluOp.ADD , Y)
+  val DecodeDefault : List[UInt] = List( InstN, FuncALU, NoneOp , Y)
   object RV32I {
     val DecodeTable : Array[(BitPat, List[UInt])] = Array(
       LUI           ->  List( InstU, FuncALU, AluOp.LUI , Y),
@@ -92,7 +93,15 @@ object Decode
     )
   }
 
-  val DecodeTable : Array[(BitPat, List[UInt])] = RV32I.DecodeTable ++ RV64I.DecodeTable
+  object TrapI {
+    val DecodeTable : Array[(BitPat, List[UInt])] = Array(
+      // 构造TRAP指令时，一般rd会是x0，保险起见，还是把regfile写使能置为N
+      Trap.TRAP     -> List( InstT, FuncTrapU, AluOp.ADD, N)
+    )
+  }
+
+  val DecodeTable : Array[(BitPat, List[UInt])] =
+    RV32I.DecodeTable ++ RV64I.DecodeTable ++ TrapI.DecodeTable
 
   val RsTypeTable = Seq (
     InstN -> Tuple2(Rs1Reg, Rs2Reg),
@@ -101,6 +110,7 @@ object Decode
     InstB -> Tuple2(Rs1Reg, Rs2Imm),  // B指令的寄存器数x[rs2]在wdata中传递
     InstI -> Tuple2(Rs1Reg, Rs2Imm),
     InstS -> Tuple2(Rs1Reg, Rs2Imm),
-    InstR -> Tuple2(Rs1Reg, Rs2Reg)
+    InstR -> Tuple2(Rs1Reg, Rs2Reg),
+    InstT -> Tuple2(Rs1Reg, Rs2Imm)   // 自定义的Trap指令，传递x[0]和立即数
   )
 }
