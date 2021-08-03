@@ -5,14 +5,13 @@ import chiseltest._
 import chiseltest.experimental.TestOptionBuilder._
 import org.scalatest.FreeSpec
 import treadle.WriteVcdAnnotation
+import Common.Const.ULONG_MAX
 
 import java.io.FileInputStream
 import java.nio.ByteOrder
 import java.nio.channels.FileChannel
 
 class TopTester extends FreeSpec with ChiselScalatestTester with PcInit with CoreConfig {
-  def ULONG_MAX : BigInt = BigInt(Long.MaxValue) * 2 + 1
-
   def show_regfile(top: Top) : Unit = {
     for (i <- 0 to 24) {
       top.io.debug.addr.poke(i.U)
