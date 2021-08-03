@@ -6,13 +6,14 @@ import Core._
 import difftest._
 import BasicDefine._
 
-object Counter {
-  def wrapAround(n: UInt, max: UInt) : UInt =
-    Mux(n > max, 0.U, n)
 
-  def counter(max: UInt, en: Bool, amt: UInt): UInt = {
-    val x = RegInit(0.U(max.getWidth.W))
-    when (en) { x := wrapAround(x + amt, max) }
+
+object Counter {
+  def counter(max: Int, ena: Bool): UInt = {
+    val x = RegInit(log2Up(max).U)
+    when(ena) {
+      x := Mux(x === max.U, 0.U, x + 1.U)
+    }
     x
   }
 }
@@ -127,19 +128,16 @@ class SimTop extends Module with CoreConfig with HasMemDataType {
   csrCommit.io.mideleg        := 0.U
   csrCommit.io.medeleg        := 0.U
 
-  private val cnt_en = Wire(Bool())
-  cnt_en := withClock(clock){~reset.asBool()}
-  val commit_cycle_cnt : UInt = Counter.counter(Int.MaxValue.U, cnt_en, 1.U)
-
-  private val commit_inst_cnt = Counter.counter(Int.MaxValue.U, cnt_en, inst_valid)
+  private val commit_cycle_cnt = Counter.counter(Int.MaxValue, clock.asBool())
+  private val commit_inst_cnt = Counter.counter(Int.MaxValue, inst_valid)
   private val trapEvent = Module(new DifftestTrapEvent)
   trapEvent.io.clock  := clock
   trapEvent.io.coreid := 0.U
   trapEvent.io.valid  := commit_trap_valid
   trapEvent.io.code   := commit_trap_code
   trapEvent.io.pc     := commit_pc
-  trapEvent.io.cycleCnt := 0.U
-  trapEvent.io.instrCnt := 0.U
+  trapEvent.io.cycleCnt := commit_cycle_cnt
+  trapEvent.io.instrCnt := commit_inst_cnt
 
 //  private val storeEvent = Module(new DifftestStoreEvent)
 //  storeEvent.io.clock := clock
