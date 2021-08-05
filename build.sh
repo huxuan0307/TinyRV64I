@@ -97,8 +97,9 @@ BUILD_PATH=$OSCPU_PATH"/build"
 DIFF_BUILD_FOLDER="build"
 VSRC_FOLDER="vsrc"
 CSRC_FOLDER="csrc"
-#BIN_FOLDER="bin"
+
 BIN_SOURCE_PATH="/home/huxuan/repo/am-kernels/tests/cpu-tests/build"
+BIN_SOURCE_PATH_MICROBENCH="/home/huxuan/repo/am-kernels/benchmarks/microbench/build"
 #BIN_FOLDER="ThirdParty/bin"
 BUILD="false"
 V_TOP_FILE="top.v"
@@ -226,7 +227,7 @@ fi
 if [[ $RUNALL == "true" ]]; then
     cd $BUILD_PATH
     create_soft_link $OSCPU_PATH/$DIFF_BUILD_FOLDER $BIN_SOURCE_PATH \"*.bin\"
-
+    create_soft_link $OSCPU_PATH/$DIFF_BUILD_FOLDER $BIN_SOURCE_PATH_MICROBENCH \"*.bin\"
     mkdir log 1>/dev/null 2>&1
     BIN_FILES=`ls *.bin`
 

@@ -1,10 +1,11 @@
 package Sim
 
 import chisel3._
-import chisel3.util.MuxLookup
+import chisel3.util._
 import Core._
 import difftest._
 import BasicDefine._
+import Chisel.unless
 import Util.Counter
 import Common.Const.ULONG_MAX
 
@@ -18,11 +19,33 @@ class MemHelper extends Module with CoreConfig with HasMemDataType {
   class MemHelperIO extends Bundle {
     val imem = new IMemIO
     val dmem = new DMemIO
+    val uart = new UARTIO
     val pc : UInt = Output(UInt(ADDR_WIDTH))
     val inst : UInt = Output(UInt(INST_WIDTH))
     val inst_valid : Bool = Output(Bool())
+    val skip : Bool = Output(Bool())
   }
   val io : MemHelperIO = IO(new MemHelperIO)
+
+  def SERIAL_MMIO_ADDR : UInt = 0xa10003f8L.U(ADDR_WIDTH)
+  private val io_addr = io.dmem.addr
+  private val ram_valid = Wire(Bool())
+  private val uart_out_valid = Wire(Bool())
+  when(io_addr === SERIAL_MMIO_ADDR) {
+    // 访问串口
+//    uart_out_valid := true.B & io.dmem.valid & io.dmem.wena
+    uart_out_valid := io.dmem.valid
+    ram_valid := false.B
+  }.otherwise {
+    uart_out_valid := false.B
+    ram_valid := io.dmem.valid
+  }
+  io.uart.out.valid := RegNext(RegNext(uart_out_valid))
+  io.uart.out.ch := RegNext(RegNext(io.dmem.wdata(7,0)))
+//  io.uart.out.ch := 0.U
+  io.uart.in.valid := 0.U
+  io.skip := uart_out_valid
+
   val data_ram : RAMHelper = Module(new RAMHelper)
   val inst_rom : ROMHelper = Module(new ROMHelper)
   private val pc = io.imem.addr
@@ -34,6 +57,8 @@ class MemHelper extends Module with CoreConfig with HasMemDataType {
   io.imem.rdata := inst
   private val wdata = io.dmem.wdata
   private val offset = io.dmem.addr(2,0)
+
+
   private val mask = MuxLookup(io.dmem.data_type, ULONG_MAX.U, Array(
     type_b -> BigInt(0xff).U(DATA_WIDTH),
     type_h -> BigInt(0xffff).U(DATA_WIDTH),
@@ -44,7 +69,7 @@ class MemHelper extends Module with CoreConfig with HasMemDataType {
   private val mask_align = mask << (offset * 8.U)
   private val rdata_align = data_ram.io.rdata >> (offset * 8.U)
   data_ram.io.clk  := clock
-  data_ram.io.en   := io.dmem.valid
+  data_ram.io.en   := ram_valid
   data_ram.io.rIdx := (io.dmem.addr - 0x80000000L.U) >> 3.U
   io.dmem.rdata := rdata_align
 
@@ -61,14 +86,15 @@ class MemHelper extends Module with CoreConfig with HasMemDataType {
 
 class SimTop extends Module with CoreConfig with HasMemDataType {
   val io : SimTopIO = IO(new SimTopIO())
-  io.uart.in.valid := false.B
-  io.uart.out.valid := false.B
-  io.uart.out.ch  := 0.U
+//  io.uart.in.valid := false.B
+//  io.uart.out.valid := false.B
+//  io.uart.out.ch  := 0.U
   val rvcore : Top = Module(new Top)
 
   private val mem = Module(new MemHelper)
   mem.io.dmem <> rvcore.io.dmem
   mem.io.imem <> rvcore.io.imem
+  io.uart     <> mem.io.uart
   rvcore.io.debug <> DontCare
   private val pc = mem.io.pc
   private val inst = mem.io.inst
@@ -88,7 +114,7 @@ class SimTop extends Module with CoreConfig with HasMemDataType {
   instrCommit.io.clock := clock
   instrCommit.io.coreid := 0.U
   instrCommit.io.index := 0.U
-  instrCommit.io.skip := false.B
+  instrCommit.io.skip := mem.io.skip
   instrCommit.io.isRVC := false.B
   instrCommit.io.scFailed := false.B
 

@@ -18,5 +18,5 @@ trait CoreConfig {
   protected def REG_ADDR_WIDTH: Width = log2Up(REG_NUM).W
 
   // ALU
-  protected def SHIFT_MSB : Int = log2Up(XLEN) - 1
+//  protected def SHIFT_MSB : Int = log2Up(XLEN) - 1
 }

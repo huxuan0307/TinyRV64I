@@ -59,7 +59,6 @@ class TopTester extends FreeSpec with ChiselScalatestTester with PcInit with Cor
     test(new Top).withAnnotations(Seq(WriteVcdAnnotation)) {
       top =>
 
-        println(f"SHIFT_MSB: $SHIFT_MSB")
 //        val imgPath = "z:/home/huxuan/repo/am-kernels/tests/cpu-tests/single_tests/asm/add.bin"
         val imgPath = "z:/home/huxuan/repo/am-kernels/tests/cpu-tests/build/leap-year-riscv64-mycpu.bin"
         var numCheck = 0

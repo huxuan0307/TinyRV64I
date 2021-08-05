@@ -24,10 +24,11 @@ class ALU extends Module with CoreConfig {
   val io: ALU_IO = IO(new ALU_IO)
   private val op_num1 = Wire(UInt(DATA_WIDTH))
   private val op_num2 = Wire(UInt(DATA_WIDTH))
-  private val shamt = Wire(UInt((SHIFT_MSB + 1).W))
+  private val shamt = Wire(UInt(6.W))
   op_num1 := io.in.a
   op_num2 := io.in.b
-  shamt := op_num2(SHIFT_MSB, 0)
+  shamt := Mux(io.in.is_word_type, op_num2(4, 0), op_num2(5, 0))
+  // todo: fix bugs in word type operation
   private val OpList = List(
     (AluOp.ADD, op_num1 + op_num2),
     (AluOp.SLL, op_num1 << shamt),
