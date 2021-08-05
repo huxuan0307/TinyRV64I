@@ -35,11 +35,13 @@ class ALU extends Module with CoreConfig {
     (AluOp.SLT, Cat(0.U((XLEN - 1).W), op_num1.asSInt < op_num2.asSInt)),
     (AluOp.SLTU, op_num1 < op_num2),
     (AluOp.XOR, op_num1 ^ op_num2),
-    (AluOp.SRL, Mux(io.in.is_word_type, Cat(0.U(32.W), op_num1(31,0)), op_num1) >> shamt),
+    (AluOp.SRL, Mux(io.in.is_word_type, op_num1(31,0), op_num1) >> shamt),
     (AluOp.OR, op_num1 | op_num2),
     (AluOp.AND, op_num1 & op_num2),
     (AluOp.SUB, op_num1 - op_num2),
-    (AluOp.SRA, (op_num1.asSInt >> shamt).asUInt),
+    (AluOp.SRA, Mux(io.in.is_word_type,
+      (op_num1(31,0).asSInt() >> shamt).asUInt(),
+      (op_num1.asSInt >> shamt).asUInt)),
     // 不需要再位移12位，在DataPathUnit里已经位移了
     (AluOp.LUI, op_num2)
   )

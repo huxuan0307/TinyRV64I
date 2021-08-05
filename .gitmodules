@@ -4,3 +4,6 @@
 [submodule "ThirdParty/difftest"]
 	path = ThirdParty/difftest
 	url = https://hub.fastgit.org/huxuan0307/difftest.git
+[submodule "ThirdParty/riscv-tests"]
+	path = ThirdParty/riscv-tests
+	url = https://hub.fastgit.org/huxuan0307/riscv-tests.git
