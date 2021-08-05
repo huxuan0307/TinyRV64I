@@ -5,18 +5,28 @@ import chisel3.internal.firrtl.Width
 import chisel3.util.log2Up
 
 trait CoreConfig {
-  protected def XLEN  = 64
-  protected def INST_WIDTH: Width = 32.W
-  protected def ADDR_WIDTH: Width = XLEN.W
-  protected def DATA_WIDTH: Width = XLEN.W
+  def XLEN : Int = 64
+  def INST_WIDTH: Width = 32.W
+  def ADDR_WIDTH: Width = XLEN.W
+  def DATA_WIDTH: Width = XLEN.W
   // 按Byte编址
-  protected def MEM_DATA_WIDTH : Width = 8.W
-  protected def IMEM_SIZE = 256
-  protected def DMEM_SIZE : Int = 256*1024
+  def MEM_DATA_WIDTH : Width = 8.W
+  def IMEM_SIZE = 256
+  def DMEM_SIZE : Int = 256*1024
 
-  protected def REG_NUM: Int = 32
-  protected def REG_ADDR_WIDTH: Width = log2Up(REG_NUM).W
+  def REG_NUM: Int = 32
+  def REG_ADDR_WIDTH: Width = log2Up(REG_NUM).W
 
-  // ALU
-//  protected def SHIFT_MSB : Int = log2Up(XLEN) - 1
+  // CSR
+  // Machine
+  def MXL = 2
+  def MXLEN : Int = 2^(MXL+4)
+  def ISAEXT : UInt = ISAExt('L')
+  def CSR_ADDR_WIDTH: Width = 12.W
+  def VendorID = 0
+  def ArchitectureID = 0
+  def ImplementationID = 0
+  def HardwareThreadID = 0
 }
+
+object CoreConfig extends CoreConfig

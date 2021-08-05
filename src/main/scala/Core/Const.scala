@@ -11,6 +11,12 @@ object BasicDefine {
   val ZERO32 : UInt = 0.U(32.W)
 }
 
+object ISAExt {
+  def apply(ch: Char) : UInt = {
+    (1 << (ch - 'A')).U(26.W)
+  }
+}
+
 trait HasInstType {
   protected val InstTypeSize = 7
   protected val InstN : UInt  = 0.U
