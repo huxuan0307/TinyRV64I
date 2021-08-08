@@ -12,6 +12,7 @@ import java.nio.ByteOrder
 import java.nio.channels.FileChannel
 
 class TopTester extends FreeSpec with ChiselScalatestTester with PcInit with CoreConfig {
+  def SERIAL_MMIO_ADDR = BigInt(0xa10003f8L)
   def show_regfile(top: Top) : Unit = {
     for (i <- 0 to 24) {
       top.io.debug.addr.poke(i.U)
@@ -26,16 +27,23 @@ class TopTester extends FreeSpec with ChiselScalatestTester with PcInit with Cor
       case 2 => (0x3, BigInt(0xffffffffL))
       case 3 => (0x7, ULONG_MAX)
     }
-    val dmem_addr = addrMap(core_dmem_addr)
 
-    val addr = ((dmem_addr >> 3) << 1).toInt
-    val offset = (dmem_addr & 0x7).toInt  // [2:0], for ld and sd
-    val wdata_align = wdata << (offset * 8)
-    val data_mask_align = data_mask << (offset * 8)
-    // read before write
-    val newData = (rdata & ~data_mask_align) | (wdata_align & data_mask_align)
-    mem(addr) = (newData & 0xffffffffL).toInt
-    mem(addr + 1) = ((newData >> 32) & 0xffffffffL).toInt
+    val is_uart = core_dmem_addr == SERIAL_MMIO_ADDR
+    if (is_uart) {
+      print((wdata&0xff).toChar)
+    }
+    else {
+      val dmem_addr = addrMap(core_dmem_addr)
+      val addr = ((dmem_addr >> 3) << 1).toInt
+      val offset = (dmem_addr & 0x7).toInt  // [2:0], for ld and sd
+      val wdata_align = wdata << (offset * 8)
+      val data_mask_align = data_mask << (offset * 8)
+      // read before write
+      val newData = (rdata & ~data_mask_align) | (wdata_align & data_mask_align)
+      mem(addr) = (newData & 0xffffffffL).toInt
+      mem(addr + 1) = ((newData >> 32) & 0xffffffffL).toInt
+    }
+
   }
   def mem_read(mem: Array[Int], core_dmem_addr: BigInt, data_type: Int) : (BigInt, BigInt) = {
     val (addr_mask, _) = data_type match {
@@ -44,23 +52,30 @@ class TopTester extends FreeSpec with ChiselScalatestTester with PcInit with Cor
       case 2 => (0x3, BigInt(0xffffffffL))
       case 3 => (0x7, ULONG_MAX)
     }
-    assert((core_dmem_addr & addr_mask) == 0, f"dmem_addr=0x$core_dmem_addr%08X, addr_mask=$addr_mask")
-    val dmem_addr = addrMap(core_dmem_addr)
-    val addr = ((dmem_addr >> 3) << 1).toInt
-    val offset = (dmem_addr & 0x7).toInt  // [2:0], for ld and sd
-    val data1 = mem(addr)
-    val data2 = mem(addr + 1)
-//    println(f"core_dmem_addr: $core_dmem_addr%016X, dmem_addr: $dmem_addr%16X, addr: $addr%08X, offset: $offset, data1: $data1, data2: $data2")
-    val rdata = (BigInt(data2.toLong & 0xffffffffL) << 32) | BigInt(data1.toLong & 0xffffffffL)
-    val rdata_align = rdata >> (offset * 8)
-    (rdata_align, rdata)
+    val is_uart = core_dmem_addr == SERIAL_MMIO_ADDR
+    if (!is_uart) {
+      assert((core_dmem_addr & addr_mask) == 0, f"dmem_addr=0x$core_dmem_addr%08X, addr_mask=$addr_mask")
+      val dmem_addr = addrMap(core_dmem_addr)
+      val addr = ((dmem_addr >> 3) << 1).toInt
+      val offset = (dmem_addr & 0x7).toInt  // [2:0], for ld and sd
+      val data1 = mem(addr)
+      val data2 = mem(addr + 1)
+      //    println(f"core_dmem_addr: $core_dmem_addr%016X, dmem_addr: $dmem_addr%16X, addr: $addr%08X, offset: $offset, data1: $data1, data2: $data2")
+      val rdata = (BigInt(data2.toLong & 0xffffffffL) << 32) | BigInt(data1.toLong & 0xffffffffL)
+      val rdata_align = rdata >> (offset * 8)
+      (rdata_align, rdata)
+    }
+    else {
+      Tuple2(BigInt(0), BigInt(0))
+    }
+
   }
   "Top test" in {
     test(new Top).withAnnotations(Seq(WriteVcdAnnotation)) {
       top =>
 
 //        val imgPath = "z:/home/huxuan/repo/am-kernels/tests/cpu-tests/single_tests/asm/add.bin"
-        val imgPath = "z:/home/huxuan/repo/am-kernels/tests/cpu-tests/build/leap-year-riscv64-mycpu.bin"
+        val imgPath = "z:/home/huxuan/repo/am-kernels/tests/cpu-tests/build/time-riscv64-mycpu.bin"
         var numCheck = 0
         val checkAddr = 0x80000010
         val memSize = 256*1024*1024
@@ -94,11 +109,12 @@ class TopTester extends FreeSpec with ChiselScalatestTester with PcInit with Cor
           pc = top.io.imem.addr.peek().litValue().toInt
           if (pc == checkAddr)
             numCheck += 1
-          print(f"pc: $pc%08x  ")
+//          print(f"pc: $pc%08x  ")
           instr = mem(addrMap(pc).toInt >> 2) & 0xffffffffL
-          print(f"inst: $instr%08x  ")
+//          print(f"inst: $instr%08x  ")
           top.io.imem.rdata.poke(instr.U(32.W))
           val dmem_valid:Boolean = top.io.dmem.valid.peek().litToBoolean
+          val mstatus = top.io.diffTest.commit
           // build a virtual dmem
           if(dmem_valid) {
             val dmem_addr = top.io.dmem.addr.peek().litValue() & ULONG_MAX
@@ -111,15 +127,15 @@ class TopTester extends FreeSpec with ChiselScalatestTester with PcInit with Cor
               wdata = top.io.dmem.wdata.peek().litValue()
               mem_write(mem, dmem_addr, wdata, rdata, data_type)
             }
-            print("dmem_valid ")
-            if (wena) {
-              print(f"write at 0x$dmem_addr%08X with 0x$wdata%016X use type$data_type")
-            } else {
-              print(f"read at 0x$dmem_addr%08X with 0x$rdata%016X use type$data_type")
-            }
+//            print("dmem_valid ")
+//            if (wena) {
+//              print(f"write at 0x$dmem_addr%08X with 0x$wdata%016X use type$data_type")
+//            } else {
+//              print(f"read at 0x$dmem_addr%08X with 0x$rdata%016X use type$data_type")
+//            }
           }
           top.clock.step()
-          println()
+//          println()
 //          show_regfile(top)
           ill_inst = top.io.ill_inst.peek().litValue().toInt
 

@@ -3,6 +3,7 @@ package Core
 import chisel3._
 import chisel3.internal.firrtl.Width
 import chisel3.util.log2Up
+import scala.math._
 
 trait CoreConfig {
   def XLEN : Int = 64
@@ -20,9 +21,10 @@ trait CoreConfig {
   // CSR
   // Machine
   def MXL = 2
-  def MXLEN : Int = 2^(MXL+4)
+  def MXLEN : Int = pow(2, MXL+4).toInt
   def ISAEXT : UInt = ISAExt('L')
-  def CSR_ADDR_WIDTH: Width = 12.W
+  def CSR_ADDR_LEN = 12
+  def CSR_ADDR_W: Width = CSR_ADDR_LEN.W
   def VendorID = 0
   def ArchitectureID = 0
   def ImplementationID = 0

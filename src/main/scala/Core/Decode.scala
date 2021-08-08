@@ -1,10 +1,11 @@
 package Core
 
-import Core.EXU.{LsuOp, AluOp, BruOp}
+import Core.EXU.CSR.CsrOp
+import Core.EXU.{AluOp, BruOp, LsuOp}
 import chisel3._
 import ISA.RV64I._
 import ISA.Trap._
-
+import ISA.CSR._
 import chisel3.util.BitPat
 
 object Decode
@@ -62,12 +63,14 @@ object Decode
       FENCE_I       ->  List( InstI, FuncNONE,NoneOp    , N),
       ECALL         ->  List( InstI, FuncSYSU,NoneOp    , N),
       EBREAK        ->  List( InstI, FuncSYSU,NoneOp    , N),
-      CSRRW         ->  List( InstI, FuncCSRU,NoneOp    , Y),
-      CSRRS         ->  List( InstI, FuncCSRU,NoneOp    , Y),
-      CSRRC         ->  List( InstI, FuncCSRU,NoneOp    , Y),
-      CSRRWI        ->  List( InstI, FuncCSRU,NoneOp    , Y),
-      CSRRSI        ->  List( InstI, FuncCSRU,NoneOp    , Y),
-      CSRRCI        ->  List( InstI, FuncCSRU,NoneOp    , Y)
+      CSRRW         ->  List( InstI, FuncCSRU,CsrOp.RW  , Y),
+      CSRRS         ->  List( InstI, FuncCSRU,CsrOp.RS  , Y),
+      CSRRC         ->  List( InstI, FuncCSRU,CsrOp.RC  , Y),
+      CSRRWI        ->  List( InstI, FuncCSRU,CsrOp.RW  , Y),
+      CSRRSI        ->  List( InstI, FuncCSRU,CsrOp.RS  , Y),
+      CSRRCI        ->  List( InstI, FuncCSRU,CsrOp.RC  , Y),
+      MRET          ->  List( InstI, FuncCSRU,CsrOp.MRET, N),
+
       // todo: add decode for fence, ECall ... CSRop
     )
   }

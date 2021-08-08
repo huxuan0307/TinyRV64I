@@ -1,6 +1,7 @@
 package Core.EXU
 
 import Core.Bundles.RegfileWritePortIO
+import Core.EXU.CSR.CSR
 import Core._
 import chisel3._
 import chisel3.util._
@@ -32,7 +33,7 @@ class ExecuteUnit extends Module with HasFuncType with CoreConfig {
   protected val alu : ALU           = Module(new ALU)
   protected val lsu : LoadStoreUnit = Module(new LoadStoreUnit)
   protected val bru : BranchUnit    = Module(new BranchUnit)
-
+  protected val csr : CSR           = Module(new CSR)
   alu.io.in.a     := io.in.op_num1
   alu.io.in.b     := io.in.op_num2
   alu.io.in.op    := io.in.op_type
@@ -49,15 +50,24 @@ class ExecuteUnit extends Module with HasFuncType with CoreConfig {
   bru.io.in.pc      := io.in.pc
   bru.io.in.offset  := io.in.op_num2// imm
   bru.io.in.ena     := io.in.func_type === FuncBRU
+  csr.io.in.src     := io.in.op_num1
+  csr.io.in.pc      := io.in.pc
+  csr.io.in.op_type := io.in.op_type
+  csr.io.in.addr    := io.in.op_num2
+  csr.io.in.ena     := io.in.func_type === FuncCSRU
 
   io.out.w.data := MuxLookup(io.in.func_type, 0.U(XLEN.W), Array(
     FuncALU -> alu.io.out.data,
     FuncLSU -> lsu.io.out.data,
-    FuncBRU -> (io.in.pc + 4.U)
+    FuncBRU -> (io.in.pc + 4.U),
+    FuncCSRU-> csr.io.out.rdata,
   ))
 
-  io.out.w.ena  := io.in.w.ena
-  io.out.w.addr := io.in.w.addr
-  io.dmem       <> lsu.io.dmem
-  io.branch     <> bru.io.out
+  io.out.w.ena      := io.in.w.ena
+  io.out.w.addr     := io.in.w.addr
+  io.dmem           <> lsu.io.dmem
+  io.branch   <> Mux(io.in.func_type === FuncBRU,
+    bru.io.out,
+    csr.io.out.trap
+  )
 }

@@ -130,29 +130,8 @@ class SimTop extends Module with CoreConfig with HasMemDataType {
   regfileCommit.io.coreid := 0.U
   regfileCommit.io.gpr := commit_gpr
 
-  private val csrCommit = Module(new DifftestCSRState)
-  csrCommit.io.clock          := clock
-  csrCommit.io.priviledgeMode := 0.U
-  csrCommit.io.mstatus        := 0.U
-  csrCommit.io.sstatus        := 0.U
-  csrCommit.io.mepc           := 0.U
-  csrCommit.io.sepc           := 0.U
-  csrCommit.io.mtval          := 0.U
-  csrCommit.io.stval          := 0.U
-  csrCommit.io.mtvec          := 0.U
-  csrCommit.io.stvec          := 0.U
-  csrCommit.io.mcause         := 0.U
-  csrCommit.io.scause         := 0.U
-  csrCommit.io.satp           := 0.U
-  csrCommit.io.mip            := 0.U
-  csrCommit.io.mie            := 0.U
-  csrCommit.io.mscratch       := 0.U
-  csrCommit.io.sscratch       := 0.U
-  csrCommit.io.mideleg        := 0.U
-  csrCommit.io.medeleg        := 0.U
-
-  private val commit_cycle_cnt = Counter.counter(Int.MaxValue, clock.asBool())
-  private val commit_inst_cnt = Counter.counter(Int.MaxValue, inst_valid)
+  private val commit_cycle_cnt = Counter.counter(0xfffffff, clock.asBool())
+  private val commit_inst_cnt = Counter.counter(0xfffffff, inst_valid)
   private val trapEvent = Module(new DifftestTrapEvent)
   trapEvent.io.clock  := clock
   trapEvent.io.coreid := 0.U

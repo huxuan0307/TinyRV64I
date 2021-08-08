@@ -34,7 +34,7 @@ class InstDecodeUnit extends Module with HasRs1Type with HasRs2Type with CoreCon
     InstU -> sext(XLEN, Cat(inst(31, 12), 0.U(12.W))),
     InstJ -> sext(XLEN, Cat(inst(31), inst(19,12), inst(20), inst(30,21), 0.U(1.W))),
     InstB -> sext(XLEN, Cat(inst(31), inst(7), inst(30,25), inst(11,8), 0.U(1.W))),
-    InstI -> sext(XLEN, inst(31,20)),
+    InstI -> sext(XLEN, inst(31,20)),   // csr addr here
     InstS -> sext(XLEN, Cat(inst(31,25), inst(11,7))),
     InstT -> sext(XLEN, inst(31,20))
   ))
