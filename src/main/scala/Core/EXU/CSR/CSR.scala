@@ -13,9 +13,11 @@ object CsrOp {
   def RC    : UInt = "b0011".U
   def ECALL : UInt = "b1000".U
   def EBREAK: UInt = "b1001".U
-  def MRET  : UInt = "b1010".U
-  def SRET  : UInt = "b1110".U
+  def MRET  : UInt = "b1100".U
+  def SRET  : UInt = "b1101".U
+  def URET  : UInt = "b1111".U
   def is_jmp(op: UInt) : Bool = op(3).asBool()
+  def is_ret(op: UInt) : Bool = op(2).asBool()
 }
 
 private object CsrAddr {
@@ -130,21 +132,21 @@ trait CSRDefine {
 
   // Machine Trap Setup
   // 0x300~0x306
-  val mstatus       : UInt = Reg(UInt(CSR_DATA_W))
-  val misa          : UInt = Reg(UInt(CSR_DATA_W))
-  val medeleg       : UInt = Reg(UInt(CSR_DATA_W))
-  val mideleg       : UInt = Reg(UInt(CSR_DATA_W))
-  val mie           : UInt = Reg(UInt(CSR_DATA_W))
-  val mtvec         : UInt = Reg(UInt(CSR_DATA_W))
-  val mcounteren    : UInt = Reg(UInt(CSR_DATA_W))
+  val mstatus       : UInt = RegInit(0.U(CSR_DATA_W))
+  val misa          : UInt = RegInit(0.U(CSR_DATA_W))
+  val medeleg       : UInt = RegInit(0.U(CSR_DATA_W))
+  val mideleg       : UInt = RegInit(0.U(CSR_DATA_W))
+  val mie           : UInt = RegInit(0.U(CSR_DATA_W))
+  val mtvec         : UInt = RegInit(0.U(CSR_DATA_W))
+  val mcounteren    : UInt = RegInit(0.U(CSR_DATA_W))
 
   // Machine Trap Handling
   // 0x340~0x344
-  val mscratch      : UInt = Reg(UInt(CSR_DATA_W))
-  val mepc          : UInt = Reg(UInt(CSR_DATA_W))
-  val mcause        : UInt = Reg(UInt(CSR_DATA_W))
-  val mtval         : UInt = Reg(UInt(CSR_DATA_W))
-  val mip           : UInt = Reg(UInt(CSR_DATA_W))
+  val mscratch      : UInt = RegInit(0.U(CSR_DATA_W))
+  val mepc          : UInt = RegInit(0.U(CSR_DATA_W))
+  val mcause        : UInt = RegInit(0.U(CSR_DATA_W))
+  val mtval         : UInt = RegInit(0.U(CSR_DATA_W))
+  val mip           : UInt = RegInit(0.U(CSR_DATA_W))
 
   // Machine Memory Protection
   // 0x3A0~0x3A3, 0x3B0~0x3BF
@@ -165,17 +167,27 @@ trait CSRDefine {
 
   // Debug/Trace Registers(shared with Debug Mode)
   // 0x7A0~0x7A3
-  val tselect       : UInt = Reg(UInt(CSR_DATA_W))
-  val tdata1        : UInt = Reg(UInt(CSR_DATA_W))
-  val tdata2        : UInt = Reg(UInt(CSR_DATA_W))
-  val tdata3        : UInt = Reg(UInt(CSR_DATA_W))
+  val tselect       : UInt = RegInit(0.U(CSR_DATA_W))
+  val tdata1        : UInt = RegInit(0.U(CSR_DATA_W))
+  val tdata2        : UInt = RegInit(0.U(CSR_DATA_W))
+  val tdata3        : UInt = RegInit(0.U(CSR_DATA_W))
 
   // Debug Mode Registers
   // 0x7B0~0x7B3
-  val dcsr          : UInt = Reg(UInt(CSR_DATA_W))
-  val dpc           : UInt = Reg(UInt(CSR_DATA_W))
-  val dscratch0     : UInt = Reg(UInt(CSR_DATA_W))
-  val dscratch1     : UInt = Reg(UInt(CSR_DATA_W))
+  val dcsr          : UInt = RegInit(0.U(CSR_DATA_W))
+  val dpc           : UInt = RegInit(0.U(CSR_DATA_W))
+  val dscratch0     : UInt = RegInit(0.U(CSR_DATA_W))
+  val dscratch1     : UInt = RegInit(0.U(CSR_DATA_W))
+
+  /** sub field in CSRs */
+
+  // mtvec
+  val mtvec_base    : UInt = mtvec(MXLEN-1, 2)
+  val mtvec_mode    : UInt = mtvec(1, 0)
+  object MtvecMode {
+    def Direct : UInt = 0.U(2.W)
+    def Vectored : UInt = 1.U(2.W)
+  }
 
   val readOnlyMap = List (
     CsrAddr.mvendorid   ->  mvendorid   ,
@@ -215,7 +227,7 @@ class CSRIO extends Bundle with HasFullOpType {
   }
   class CSROutPort extends Bundle {
     val rdata : UInt          = Output(UInt(DATA_WIDTH))
-    val trap  : BranchPathIO  = new BranchPathIO
+    val jmp  : BranchPathIO  = new BranchPathIO
   }
   val in = new CSRInPort
   val out = new CSROutPort
@@ -227,7 +239,8 @@ class CSR extends Module with CSRDefine {
   private val op = io.in.op_type
   private val pc = io.in.pc
   private val ena = io.in.ena
-  private val mode_m::mode_h::mode_s::mode_u::Nil = Enum(4)
+  // 为了用Enum，被迫下划线命名枚举。。。bullshxt
+  private val mode_u::mode_s::mode_h::mode_m::Nil = Enum(4)
   private val currentPriv = RegInit(UInt(2.W), mode_m)
 
   private val rdata = MuxLookup(addr, 0.U(MXLEN.W), readOnlyMap++readWriteMap)
@@ -237,11 +250,13 @@ class CSR extends Module with CSRDefine {
     CsrOp.RC -> (rdata & (~io.in.src).asUInt())
   ))
   mcycle := mcycle + 1.U
-  // 为了用Enum，被迫下划线命名法。。。bullsxxt
   private val is_mret = CsrOp.MRET === op
   private val is_sret = CsrOp.SRET === op
+  private val is_uret = CsrOp.URET === op
   private val is_jmp : Bool = CsrOp.is_jmp(op)
+  private val is_ret = CsrOp.is_ret(op) & is_jmp
   private val new_pc = WireInit(0.U(ADDR_WIDTH))
+  dontTouch(new_pc)
   private val trap_valid = WireInit(false.B)
   when(ena && !is_jmp) {
     new_pc := 0.U
@@ -264,39 +279,50 @@ class CSR extends Module with CSRDefine {
       // todo map Machine Counter Setup, Debug/Trace Registers, Debug Mode Registers
     }
   }.elsewhen(ena && is_jmp){
+    // handle output
     trap_valid := true.B
-    new_pc := MuxLookup(op, 0.U, Array(
-      CsrOp.ECALL -> Cat(mtvec(MXLEN-1, 2), 0.U(2.W)),
-      CsrOp.MRET  -> mepc,
-    ))
+    new_pc := Mux(is_ret,
+      MuxLookup(currentPriv, 0.U, Array(
+        mode_m -> mepc,
+        // todo: add mode s&u
+      )),
+      // is except
+      MuxLookup(mtvec_mode, 0.U, Array(
+        MtvecMode.Direct -> Cat(mtvec_base(61,0), 0.U(2.W)),
+        MtvecMode.Vectored -> Cat(mtvec_base + mcause, 0.U(2.W))
+      ))
+    )
+    // handle internal
     when (op === CsrOp.ECALL) {
       when (currentPriv === mode_m) {
         mepc := pc
+        mcause := Exceptions.MECall.U
       }
       val mstatus_old = WireInit(mstatus.asTypeOf(new MStatus))
       val mstatus_new = WireInit(mstatus.asTypeOf(new MStatus))
       mstatus_new.IE.M := false.B           // xIE设为0
       mstatus_new.PIE.M := mstatus_old.IE.M // xPIE设为xIE的值
-      mstatus_new.MPP := mode_m
-      mstatus := mstatus_new.asUInt
+      mstatus_new.MPP := currentPriv        // xPPi设为之前的特权级
+      mstatus := mstatus_new.asUInt         // 写回mstatus
 
     }.elsewhen(is_mret) {
       val mstatus_old = WireInit(mstatus.asTypeOf(new MStatus))
       val mstatus_new = WireInit(mstatus.asTypeOf(new MStatus))
-      mstatus_new.IE.M := mstatus_old.PIE.M // xIE设为xPIE
       currentPriv := mstatus_old.MPP        // 特权模式修改为y模式
       mstatus_new.PIE.M := true.B           // xPIE设为1
-      // todo: replace it with mode_u when supporting u mode
-      mstatus_new.MPP := mode_m             // xPP设置为U模式（不支持U模式，则是M模式）
+      mstatus_new.IE.M := mstatus_old.PIE.M // xIE设为xPIE
+      // todo: 给CSR加上U模式，这里为了和NEMU的行为同步，MPP设定为mode_u
+      mstatus_new.MPP := mode_u             // xPP设置为U模式（不支持U模式，则是M模式）
       mstatus := mstatus_new.asUInt
     }
   }
-  io.out.trap.new_pc := new_pc
-  io.out.trap.valid := trap_valid
+  io.out.jmp.new_pc := new_pc
+  io.out.jmp.valid := trap_valid
   io.out.rdata := rdata
 
   private val csrCommit = Module(new DifftestCSRState)
   csrCommit.io.clock          := clock
+  csrCommit.io.coreid         := 0.U
   csrCommit.io.priviledgeMode := currentPriv
   csrCommit.io.mstatus        := mstatus
   csrCommit.io.sstatus        := 0.U

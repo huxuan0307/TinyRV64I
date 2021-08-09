@@ -153,7 +153,7 @@ PROJECT_PATH=$OSCPU_PATH/projects/$PROJECT_FOLDER
 if [[ "$DIFFTEST" == "true" ]]; then
     V_TOP_FILE=$DIFFTEST_TOP_FILE
     export NEMU_HOME=$OSCPU_PATH/$NEMU_FOLDER
-    export NOOP_HOME=$PROJECT_PATH
+    export NOOP_HOME=$OSCPU_PATH
 fi
 
 # Get id and name

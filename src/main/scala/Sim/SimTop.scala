@@ -141,6 +141,7 @@ class SimTop extends Module with CoreConfig with HasMemDataType {
   trapEvent.io.cycleCnt := commit_cycle_cnt
   trapEvent.io.instrCnt := commit_inst_cnt
 
+
 //  private val storeEvent = Module(new DifftestStoreEvent)
 //  storeEvent.io.clock := clock
 //  storeEvent.io.coreid := 0.U

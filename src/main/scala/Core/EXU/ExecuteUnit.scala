@@ -68,6 +68,6 @@ class ExecuteUnit extends Module with HasFuncType with CoreConfig {
   io.dmem           <> lsu.io.dmem
   io.branch   <> Mux(io.in.func_type === FuncBRU,
     bru.io.out,
-    csr.io.out.trap
+    csr.io.out.jmp
   )
 }
