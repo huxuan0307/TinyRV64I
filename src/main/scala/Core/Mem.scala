@@ -1,5 +1,6 @@
 package Core
 
+import Core.Config.{CoreConfig, HasMemDataType}
 import chisel3._
 import chisel3.util._
 

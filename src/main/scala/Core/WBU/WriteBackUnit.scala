@@ -1,12 +1,9 @@
-package Core
+package Core.WBU
 
 import Core.Bundles.RegfileWritePortIO
+import Core.Config.CoreConfig
 import Core.EXU.ExecuteOutPort
 import chisel3._
-
-class WriteBackOutPort extends Bundle with CoreConfig {
-
-}
 
 class WriteBackUnitIO extends Bundle with CoreConfig {
   val in : ExecuteOutPort = Flipped(new ExecuteOutPort)

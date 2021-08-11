@@ -1,10 +1,13 @@
-package Core
+package Core.DataPath
 
 import Core.Bundles.{RegfileDebugIO, RegfileWritePortIO}
+import Core.Config.{CoreConfig, HasRs1Type, HasRs2Type}
 import Core.DiffTest.DiffTestIO
 import Core.EXU.ExecuteInPort
+import Core.IDU.InstDecodeUnitOutPort
 import chisel3._
 import chisel3.util._
+import difftest.DifftestArchIntRegState
 
 class DataPathUnitIO extends Bundle {
   val from_idu : InstDecodeUnitOutPort = Flipped(new InstDecodeUnitOutPort)
@@ -16,7 +19,7 @@ class DataPathUnitIO extends Bundle {
 
 class DataPathUnit extends Module with HasRs1Type with HasRs2Type with CoreConfig {
   val io : DataPathUnitIO = IO(new DataPathUnitIO)
-  val rf = new RegfileImpl
+  val rf = new Regfile
   private val rs1Data = rf.read(io.from_idu.rs1Addr)
   private val rs2Data = rf.read(io.from_idu.rs2Addr)
 
@@ -45,9 +48,14 @@ class DataPathUnit extends Module with HasRs1Type with HasRs2Type with CoreConfi
   io.to_exu.is_word_type := io.from_idu.is_word_type
   io.debug            <> DontCare
   io.diffTest.commit  := DontCare
-  io.diffTest.trap    <> DontCare
+  io.diffTest.trap.valid:= DontCare
+  io.diffTest.trap.code := rf.read(10.U)(2,0)
   io.diffTest.wreg    <> io.from_wbu
   // zipWithIndex 按序号压缩，连续的情况下，使用foreach遍历，不连续使用map
-  io.diffTest.reg.zipWithIndex.foreach{ case (r, i) => r := rf.read(i.U) }
+
+  private val regfileCommit = Module(new DifftestArchIntRegState)
+  regfileCommit.io.clock := clock
+  regfileCommit.io.coreid := 0.U
+  regfileCommit.io.gpr.zipWithIndex.foreach{ case (r, i) => r:= rf.read(i.U)}
 
 }

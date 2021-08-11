@@ -6,6 +6,7 @@ import chiseltest.experimental.TestOptionBuilder._
 import org.scalatest.FreeSpec
 import treadle.WriteVcdAnnotation
 import Common.Const.ULONG_MAX
+import Core.Config.{CoreConfig, PcInit}
 
 import java.io.FileInputStream
 import java.nio.ByteOrder

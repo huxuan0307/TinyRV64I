@@ -1,6 +1,5 @@
 package Util
 
-import chisel3.util.log2Up
 import chisel3._
 
 object Counter {

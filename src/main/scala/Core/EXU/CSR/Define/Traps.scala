@@ -1,4 +1,4 @@
-package Core.EXU.CSR
+package Core.EXU.CSR.Define
 
 object Traps {
   def InstAddressMisaligned = 0
@@ -16,4 +16,3 @@ object Traps {
   def LoadPageFault = 13
   def StorePageFault = 15
 }
-

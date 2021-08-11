@@ -2,8 +2,16 @@ package Core.EXU
 
 import chisel3._
 import chisel3.util._
-import Core.BasicDefine._
-import Core.{CoreConfig, HasFullOpType}
+import Core.Config.BasicDefine._
+import Core.Config.{CoreConfig, HasFullOpType}
+
+class TrapUnit extends Module with CoreConfig {
+  import TrapOp._
+  val io : TrapUnitIO = IO(new TrapUnitIO)
+  io.out.data := MuxLookup(io.in.op, ZERO64, Array(
+    NONE -> ZERO64
+  ))
+}
 
 object TrapOp {
   def NONE : UInt = "b000".U  // 啥事不做
@@ -23,12 +31,4 @@ class TrapUnitOutputPort extends Bundle with CoreConfig {
 class TrapUnitIO extends Bundle with CoreConfig {
   val in = new TrapUnitInputPort
   val out = new TrapUnitOutputPort
-}
-
-class TrapUnit extends Module with CoreConfig {
-  import TrapOp._
-  val io : TrapUnitIO = IO(new TrapUnitIO)
-  io.out.data := MuxLookup(io.in.op, ZERO64, Array(
-    NONE -> ZERO64
-  ))
 }

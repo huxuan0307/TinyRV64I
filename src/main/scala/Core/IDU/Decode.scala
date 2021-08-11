@@ -1,11 +1,12 @@
-package Core
+package Core.IDU
 
+import Core.Config.{HasFuncType, HasInstType, HasRs1Type, HasRs2Type}
 import Core.EXU.CSR.CsrOp
 import Core.EXU.{AluOp, BruOp, LsuOp}
-import chisel3._
-import ISA.RV64I._
-import ISA.Trap._
-import ISA.CSR._
+import Core.ISA.CSR._
+import Core.ISA.RV64I._
+import Core.ISA.Trap.Trap
+import chisel3.{UInt, fromStringToLiteral}
 import chisel3.util.BitPat
 
 object Decode
@@ -14,7 +15,7 @@ object Decode
     with HasRs1Type
     with HasRs2Type
 {
-  import Core.BasicDefine._
+  import Core.Config.BasicDefine._
   private val NoneOp : UInt = "b00000".U
   // 多路选择的sel尽量在这里完成，不够就加列
   //

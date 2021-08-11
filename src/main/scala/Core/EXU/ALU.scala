@@ -1,24 +1,9 @@
 package Core.EXU
 
-import Core.Bundles.ALU_IO
-import Core.{CoreConfig, sext}
+import Core.Config.{CoreConfig, HasFullOpType}
+import Util.sext
 import chisel3._
 import chisel3.util.{Cat, MuxLookup}
-
-// {funct7[5], funct3[2:0]}
-object AluOp {
-  def ADD : UInt  = "b0000".U
-  def SLL : UInt  = "b0001".U
-  def SLT : UInt  = "b0010".U
-  def SLTU: UInt  = "b0011".U
-  def XOR : UInt  = "b0100".U
-  def SRL : UInt  = "b0101".U
-  def OR  : UInt  = "b0110".U
-  def AND : UInt  = "b0111".U
-  def SUB : UInt  = "b1000".U | ADD
-  def SRA : UInt  = "b1000".U | SRL
-  def LUI : UInt  = "b1111".U
-}
 
 class ALU extends Module with CoreConfig {
   val io: ALU_IO = IO(new ALU_IO)
@@ -28,7 +13,6 @@ class ALU extends Module with CoreConfig {
   op_num1 := io.in.a
   op_num2 := io.in.b
   shamt := Mux(io.in.is_word_type, op_num2(4, 0), op_num2(5, 0))
-  // todo: fix bugs in word type operation
   private val OpList = List(
     (AluOp.ADD, op_num1 + op_num2),
     (AluOp.SLL, op_num1 << shamt),
@@ -53,4 +37,36 @@ class ALU extends Module with CoreConfig {
     sext(XLEN, tmp_res(31, 0)),
     tmp_res
   )
+}
+
+// {funct7[5], funct3[2:0]}
+object AluOp {
+  def ADD : UInt  = "b0000".U
+  def SLL : UInt  = "b0001".U
+  def SLT : UInt  = "b0010".U
+  def SLTU: UInt  = "b0011".U
+  def XOR : UInt  = "b0100".U
+  def SRL : UInt  = "b0101".U
+  def OR  : UInt  = "b0110".U
+  def AND : UInt  = "b0111".U
+  def SUB : UInt  = "b1000".U | ADD
+  def SRA : UInt  = "b1000".U | SRL
+  def LUI : UInt  = "b1111".U
+}
+
+class ALU_InputPortIO extends Bundle with CoreConfig with HasFullOpType{
+  val ena : Bool = Input(Bool())
+  val op: UInt = Input(UInt(FullOpTypeWidth))
+  val a: UInt = Input(UInt(DATA_WIDTH))
+  val b: UInt = Input(UInt(DATA_WIDTH))
+  val is_word_type : Bool = Input(Bool())
+}
+
+class ALU_OutputPortIO extends Bundle with CoreConfig {
+  val data: UInt = Output(UInt(DATA_WIDTH))
+}
+
+class ALU_IO extends Bundle {
+  val in = new ALU_InputPortIO
+  val out = new ALU_OutputPortIO
 }

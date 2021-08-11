@@ -1,8 +1,30 @@
 package Core.EXU
 
-import Core.{BranchPathIO, CoreConfig, HasFullOpType}
+import Core.Bundles.BranchPathIO
+import Core.Config.{CoreConfig, HasFullOpType}
 import chisel3._
 import chisel3.util._
+
+class BranchUnit extends Module {
+  val io : BranchUnitIO = IO(new BranchUnitIO)
+  io.out.valid := io.in.ena & MuxLookup(io.in.op_type, false.B, Array(
+    BruOp.BEQ -> (io.in.op_num1 === io.in.op_num2),
+    BruOp.BNE -> (io.in.op_num1 =/= io.in.op_num2),
+    BruOp.BLT -> (io.in.op_num1.asSInt() < io.in.op_num2.asSInt()),
+    BruOp.BGE -> (io.in.op_num1.asSInt() >= io.in.op_num2.asSInt()),
+    BruOp.BLTU -> (io.in.op_num1 < io.in.op_num2),
+    BruOp.BGEU -> (io.in.op_num1 >= io.in.op_num2),
+    BruOp.JAL -> true.B,
+    BruOp.JALR -> true.B
+  ))
+  // B-Type and jal: pc + offset
+  // jalr: x[rs1] + offset
+  io.out.new_pc := Mux(
+    io.in.op_type =/= BruOp.JALR,
+    io.in.pc + io.in.offset,
+    io.in.op_num1 + io.in.offset
+  )
+}
 
 object BruOp {
   val BEQ  :UInt = "b0000".U
@@ -27,25 +49,4 @@ class BranchUnitInPort extends Bundle with CoreConfig with HasFullOpType {
 class BranchUnitIO extends Bundle with CoreConfig with HasFullOpType {
   val in = new BranchUnitInPort
   val out : BranchPathIO = new BranchPathIO
-}
-
-class BranchUnit extends Module {
-  val io : BranchUnitIO = IO(new BranchUnitIO)
-  io.out.valid := io.in.ena & MuxLookup(io.in.op_type, false.B, Array(
-    BruOp.BEQ -> (io.in.op_num1 === io.in.op_num2),
-    BruOp.BNE -> (io.in.op_num1 =/= io.in.op_num2),
-    BruOp.BLT -> (io.in.op_num1.asSInt() < io.in.op_num2.asSInt()),
-    BruOp.BGE -> (io.in.op_num1.asSInt() >= io.in.op_num2.asSInt()),
-    BruOp.BLTU -> (io.in.op_num1 < io.in.op_num2),
-    BruOp.BGEU -> (io.in.op_num1 >= io.in.op_num2),
-    BruOp.JAL -> true.B,
-    BruOp.JALR -> true.B
-  ))
-  // B-Type and jal: pc + offset
-  // jalr: x[rs1] + offset
-  io.out.new_pc := Mux(
-    io.in.op_type =/= BruOp.JALR,
-    io.in.pc + io.in.offset,
-    io.in.op_num1 + io.in.offset
-  )
 }

@@ -1,31 +1,11 @@
 package Core.EXU
 
-import Core.Bundles.RegfileWritePortIO
+import Core.Bundles.{BranchPathIO, RegfileWritePortIO}
+import Core.Config.{CoreConfig, HasFullOpType, HasFuncType}
 import Core.EXU.CSR.CSR
 import Core._
 import chisel3._
 import chisel3.util._
-
-class ExecuteInPort extends Bundle with CoreConfig with HasFuncType with HasFullOpType{
-  val func_type : UInt = Input(UInt(FuncTypeWidth))
-  val op_type : UInt = Input(UInt(FullOpTypeWidth))
-  val op_num1 : UInt = Input(UInt(DATA_WIDTH))
-  val op_num2 : UInt = Input(UInt(DATA_WIDTH))
-  val pc      : UInt = Input(UInt(ADDR_WIDTH))
-  val w : RegfileWritePortIO = new RegfileWritePortIO
-  val is_word_type : Bool = Input(Bool())
-}
-
-class ExecuteOutPort extends Bundle with CoreConfig {
-  val w : RegfileWritePortIO = Flipped(new RegfileWritePortIO)
-}
-
-class EXU_IO extends Bundle{
-  val in = new ExecuteInPort
-  val out = new ExecuteOutPort
-  val dmem : DMemIO = Flipped(new DMemIO)
-  val branch = new BranchPathIO
-}
 
 class ExecuteUnit extends Module with HasFuncType with CoreConfig {
   val io: EXU_IO = IO(new EXU_IO)
@@ -70,4 +50,25 @@ class ExecuteUnit extends Module with HasFuncType with CoreConfig {
     bru.io.out,
     csr.io.out.jmp
   )
+}
+
+class ExecuteInPort extends Bundle with CoreConfig with HasFuncType with HasFullOpType{
+  val func_type : UInt = Input(UInt(FuncTypeWidth))
+  val op_type : UInt = Input(UInt(FullOpTypeWidth))
+  val op_num1 : UInt = Input(UInt(DATA_WIDTH))
+  val op_num2 : UInt = Input(UInt(DATA_WIDTH))
+  val pc      : UInt = Input(UInt(ADDR_WIDTH))
+  val w : RegfileWritePortIO = new RegfileWritePortIO
+  val is_word_type : Bool = Input(Bool())
+}
+
+class ExecuteOutPort extends Bundle with CoreConfig {
+  val w : RegfileWritePortIO = Flipped(new RegfileWritePortIO)
+}
+
+class EXU_IO extends Bundle{
+  val in = new ExecuteInPort
+  val out = new ExecuteOutPort
+  val dmem : DMemIO = Flipped(new DMemIO)
+  val branch = new BranchPathIO
 }

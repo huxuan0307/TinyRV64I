@@ -1,4 +1,4 @@
-package Core
+package Core.Config
 
 import chisel3._
 import chisel3.internal.firrtl.Width
@@ -12,15 +12,15 @@ object BasicDefine {
 }
 
 trait HasInstType {
-  protected val InstTypeSize = 7
-  protected val InstN : UInt  = 0.U
-  protected val InstU : UInt  = 1.U
-  protected val InstJ : UInt  = 2.U
-  protected val InstB : UInt  = 3.U
-  protected val InstI : UInt  = 4.U
-  protected val InstS : UInt  = 5.U
-  protected val InstR : UInt  = 6.U
-  protected val InstT : UInt  = 7.U // Only for debug trap
+  protected def InstTypeSize = 8
+  protected def InstN : UInt  = 0.U
+  protected def InstU : UInt  = 1.U
+  protected def InstJ : UInt  = 2.U
+  protected def InstB : UInt  = 3.U
+  protected def InstI : UInt  = 4.U
+  protected def InstS : UInt  = 5.U
+  protected def InstR : UInt  = 6.U
+  protected def InstT : UInt  = 7.U // Only for debug trap
 }
 
 trait HasFuncType {
@@ -38,8 +38,8 @@ trait HasFuncType {
 }
 
 trait HasFullOpType {
-  protected val FullOpTypeSize = 32
-  protected val FullOpTypeWidth: Width = log2Up(FullOpTypeSize).W
+  protected def FullOpTypeSize = 32
+  protected def FullOpTypeWidth: Width = log2Up(FullOpTypeSize).W
 }
 
 trait HasRs1Type {
@@ -65,3 +65,11 @@ trait HasMemDataType {
   protected val MemDataTypeWidth: Width = log2Up(MemDataTypeSize).W
 }
 
+trait PcInit {
+  val pc_init = 0x80000000L
+  val pc_shift = 0x7f000000L
+
+  def addrMap(src : Long) : Long = src - pc_shift
+
+  def addrMap(src : BigInt) : BigInt = src - BigInt(pc_shift)
+}

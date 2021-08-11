@@ -1,41 +1,10 @@
 package Core.EXU
 
+import Core.Config.{CoreConfig, HasFullOpType, HasMemDataType}
 import Core._
+import Util.{sext, zext}
 import chisel3._
 import chisel3.util._
-
-object LsuOp {
-  def LB  :UInt  = "b0000".U
-  def LH  :UInt  = "b0001".U
-  def LW  :UInt  = "b0010".U
-  def LD  :UInt  = "b0011".U
-  def LBU :UInt  = "b0100".U
-  def LHU :UInt  = "b0101".U
-  def LWU :UInt  = "b0110".U
-  def SB  :UInt  = "b1000".U
-  def SH  :UInt  = "b1001".U
-  def SW  :UInt  = "b1010".U
-  def SD  :UInt  = "b1011".U
-}
-
-class LoadStoreUnitInPort extends Bundle with CoreConfig with HasFullOpType {
-  val ena : Bool = Input(Bool())
-  val op_type : UInt = Input(UInt(FullOpTypeWidth))
-  val op_num1 : UInt = Input(UInt(ADDR_WIDTH))
-  val op_num2 : UInt = Input(UInt(ADDR_WIDTH))
-  val wdata : UInt = Input(UInt(DATA_WIDTH))
-}
-
-class LoadStoreUnitOutPort extends Bundle with CoreConfig with HasFullOpType {
-  val data : UInt = Output(UInt(DATA_WIDTH))
-
-}
-
-class LoadStoreUnitIO extends Bundle with CoreConfig with HasFullOpType {
-  val in = new LoadStoreUnitInPort
-  val out = new LoadStoreUnitOutPort
-  val dmem : DMemIO = Flipped(new DMemIO)
-}
 
 class LoadStoreUnit extends Module with CoreConfig with HasMemDataType {
   val io : LoadStoreUnitIO = IO(new LoadStoreUnitIO)
@@ -61,4 +30,36 @@ class LoadStoreUnit extends Module with CoreConfig with HasMemDataType {
   io.dmem.data_type := io.in.op_type(1,0)
   io.dmem.valid := io.in.ena & true.B
   io.dmem.debug.addr := DontCare
+}
+
+object LsuOp {
+  def LB  :UInt  = "b0000".U
+  def LH  :UInt  = "b0001".U
+  def LW  :UInt  = "b0010".U
+  def LD  :UInt  = "b0011".U
+  def LBU :UInt  = "b0100".U
+  def LHU :UInt  = "b0101".U
+  def LWU :UInt  = "b0110".U
+  def SB  :UInt  = "b1000".U
+  def SH  :UInt  = "b1001".U
+  def SW  :UInt  = "b1010".U
+  def SD  :UInt  = "b1011".U
+}
+
+class LoadStoreUnitInPort extends Bundle with CoreConfig with HasFullOpType {
+  val ena : Bool = Input(Bool())
+  val op_type : UInt = Input(UInt(FullOpTypeWidth))
+  val op_num1 : UInt = Input(UInt(ADDR_WIDTH))
+  val op_num2 : UInt = Input(UInt(ADDR_WIDTH))
+  val wdata : UInt = Input(UInt(DATA_WIDTH))
+}
+
+class LoadStoreUnitOutPort extends Bundle with CoreConfig with HasFullOpType {
+  val data : UInt = Output(UInt(DATA_WIDTH))
+}
+
+class LoadStoreUnitIO extends Bundle with CoreConfig with HasFullOpType {
+  val in = new LoadStoreUnitInPort
+  val out = new LoadStoreUnitOutPort
+  val dmem : DMemIO = Flipped(new DMemIO)
 }

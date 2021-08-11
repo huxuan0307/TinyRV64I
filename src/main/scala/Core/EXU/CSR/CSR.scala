@@ -1,8 +1,10 @@
 package Core.EXU.CSR
 
-import Core.CoreConfig._
-import Core.EXU.CSR.Privilege.{supportSupervisor, supportUser}
-import Core.{BranchPathIO, HasFullOpType}
+import Core.Bundles.BranchPathIO
+import Core.Config.CoreConfig._
+import Core.EXU.CSR.Define.Privilege.{supportSupervisor, supportUser}
+import Core.Config.HasFullOpType
+import Core.EXU.CSR.Define.{Privilege, Traps}
 import chisel3._
 import chisel3.internal.firrtl.Width
 import chisel3.util._

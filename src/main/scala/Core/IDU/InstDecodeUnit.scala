@@ -1,16 +1,12 @@
-package Core
+package Core.IDU
 
-import Core.Decode._
+import Core.Bundles.PcInstPathIO
+import Core.Config._
 import Core.EXU.CSR.CsrOp
+import Core.IDU.Decode._
+import Util.{sext, zext}
 import chisel3._
 import chisel3.util._
-
-class InstDecodeUnitIO extends Bundle {
-  val in: PcInstPathIO = Flipped(new PcInstPathIO)
-  val out = new InstDecodeUnitOutPort
-  val illegal : Bool = Output(Bool())
-  val is_trap : Bool = Output(Bool())
-}
 
 class InstDecodeUnit extends Module with HasRs1Type with HasRs2Type with CoreConfig with HasInstType with HasFuncType {
   val io: InstDecodeUnitIO = IO(new InstDecodeUnitIO)
@@ -23,8 +19,6 @@ class InstDecodeUnit extends Module with HasRs1Type with HasRs2Type with CoreCon
     = ListLookup(inst, DecodeDefault, DecodeTable)
   io.out.rs1Type := rs1Type
   io.out.rs2Type := rs2Type
-//  io.out.rs1Type := MuxLookup(instType, Rs1None, RsTypeTable.map(p => (p._1, p._2._1)))
-//  io.out.rs2Type := MuxLookup(instType, Rs2None, RsTypeTable.map(p => (p._1, p._2._2)))
   io.out.funcType := funcType
   io.out.opType   := opType
   io.out.rs1Addr   := rs1Reg
@@ -32,7 +26,6 @@ class InstDecodeUnit extends Module with HasRs1Type with HasRs2Type with CoreCon
   io.out.rdEna    := rdEna
   io.out.rdAddr    := rdReg
 
-  // data
   io.out.uimm_ext     := Mux(CsrOp.is_csri(opType), zext(XLEN, uimm), 0.U)
   io.out.imm_ext      := MuxLookup(instType, 0.U, List(
     InstU -> sext(XLEN, Cat(inst(31, 12), 0.U(12.W))),
@@ -47,4 +40,34 @@ class InstDecodeUnit extends Module with HasRs1Type with HasRs2Type with CoreCon
   io.out.pc             := io.in.pc
   io.illegal            := instType === InstN
   io.is_trap            := instType === InstT // 自定义的Trap指令，单独的指令类型
+}
+
+
+trait DecodeConst extends HasRs1Type with HasRs2Type with HasFuncType with HasFullOpType
+
+trait CtrlPathIO extends Bundle with DecodeConst with CoreConfig {
+  val rs1Type   : UInt  = Output(UInt(Rs1TypeWidth))
+  val rs2Type   : UInt  = Output(UInt(Rs2TypeWidth))
+  val funcType  : UInt  = Output(UInt(FuncTypeWidth))
+  val opType    : UInt  = Output(UInt(FullOpTypeWidth))
+  val rs1Addr   : UInt  = Output(UInt(REG_ADDR_WIDTH))
+  val rs2Addr   : UInt  = Output(UInt(REG_ADDR_WIDTH))
+  val rdEna     : UInt  = Output(UInt(1.W))
+  val rdAddr    : UInt  = Output(UInt(REG_ADDR_WIDTH))
+
+  val is_word_type : Bool = Output(Bool())
+}
+
+class InstDecodeUnitOutPort extends CtrlPathIO {
+  val pc : UInt = Output(UInt(ADDR_WIDTH))
+  val uimm_ext: UInt = Output(UInt(DATA_WIDTH))
+  val imm_ext: UInt = Output(UInt(DATA_WIDTH))
+  val rd_data : UInt = Output(UInt(DATA_WIDTH))
+}
+
+class InstDecodeUnitIO extends Bundle {
+  val in: PcInstPathIO = Flipped(new PcInstPathIO)
+  val out = new InstDecodeUnitOutPort
+  val illegal : Bool = Output(Bool())
+  val is_trap : Bool = Output(Bool())
 }

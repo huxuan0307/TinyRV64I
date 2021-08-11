@@ -1,8 +1,9 @@
-package Core
+package Core.Config
 
 import chisel3._
 import chisel3.internal.firrtl.Width
-import chisel3.util.{log2Up, Cat}
+import chisel3.util.log2Up
+
 import scala.math._
 
 trait CoreConfig {

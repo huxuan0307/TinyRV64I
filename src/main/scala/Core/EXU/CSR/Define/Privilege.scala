@@ -1,7 +1,7 @@
-package Core.EXU.CSR
+package Core.EXU.CSR.Define
 
-import chisel3._
-import Core.CoreConfig._
+import Core.Config.CoreConfig.ISAEXT
+import chisel3.{UInt, fromStringToLiteral, fromIntToWidth}
 
 object Privilege {
   object Level {
@@ -24,7 +24,4 @@ object Privilege {
   }
   def supportUser : Boolean = ISAEXT.support('U')
   def supportSupervisor : Boolean = ISAEXT.support('S')
-
 }
-
-

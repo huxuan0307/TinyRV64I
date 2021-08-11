@@ -1,8 +1,12 @@
 package Core
 
 import Core.Bundles.RegfileDebugIO
+import Core.DataPath.DataPathUnit
 import Core.DiffTest.DiffTestIO
 import Core.EXU.ExecuteUnit
+import Core.IDU.InstDecodeUnit
+import Core.IFU.InstFetchUnit
+import Core.WBU.WriteBackUnit
 import chisel3._
 
 class TopIO extends Bundle {
@@ -20,7 +24,6 @@ class Top extends Module {
   val wbu : WriteBackUnit = Module(new WriteBackUnit)
   val idu : InstDecodeUnit = Module(new InstDecodeUnit)
   val exu : ExecuteUnit = Module(new ExecuteUnit)
-//  val dmem : DataMem = Module(new DataMem)
 
   ifu.io.imem           <> io.imem
   ifu.io.to_idu         <> idu.io.in
@@ -35,7 +38,7 @@ class Top extends Module {
   io.diffTest.commit    := withClock(clock){
     ~reset.asBool()
   }
-  io.diffTest.reg       <> data_path.io.diffTest.reg
   io.diffTest.wreg      <> wbu.io.out
   io.diffTest.trap.valid:= idu.io.is_trap
+  io.diffTest.trap.code := data_path.io.diffTest.trap.code
 }
