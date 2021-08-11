@@ -3,8 +3,8 @@ package Core
 import chisel3._
 
 trait DataPathIO extends Bundle with CoreConfig {
-  val rs1_data: UInt = Output(UInt(DATA_WIDTH))
-  val rs2_data: UInt = Output(UInt(DATA_WIDTH))
+  val uimm_ext: UInt = Output(UInt(DATA_WIDTH))
+  val imm_ext: UInt = Output(UInt(DATA_WIDTH))
   val rd_data : UInt = Output(UInt(DATA_WIDTH))
 }
 

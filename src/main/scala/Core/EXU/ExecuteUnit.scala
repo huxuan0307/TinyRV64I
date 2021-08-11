@@ -41,7 +41,7 @@ class ExecuteUnit extends Module with HasFuncType with CoreConfig {
   alu.io.in.is_word_type := io.in.is_word_type
   lsu.io.in.op_num1 := io.in.op_num1
   lsu.io.in.op_num2 := io.in.op_num2
-  lsu.io.in.data    := io.in.w.data
+  lsu.io.in.wdata    := io.in.w.data
   lsu.io.in.op_type := io.in.op_type
   lsu.io.in.ena     := io.in.func_type === FuncLSU
   bru.io.in.op_num1 := io.in.op_num1// jalr:   x[rs1]

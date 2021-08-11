@@ -1,6 +1,6 @@
 package Core.EXU.CSR
 
-object Exceptions {
+object Traps {
   def InstAddressMisaligned = 0
   def InstAccessFault = 1
   def IllegalInst = 2

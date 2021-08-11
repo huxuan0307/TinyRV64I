@@ -1,6 +1,7 @@
 package Core.EXU.CSR
 
 import Core.CoreConfig._
+import Core.EXU.CSR.Privilege.{supportSupervisor, supportUser}
 import Core.{BranchPathIO, HasFullOpType}
 import chisel3._
 import chisel3.internal.firrtl.Width
@@ -8,16 +9,20 @@ import chisel3.util._
 import difftest.DifftestCSRState
 
 object CsrOp {
-  def RW    : UInt = "b0001".U
-  def RS    : UInt = "b0010".U
-  def RC    : UInt = "b0011".U
-  def ECALL : UInt = "b1000".U
-  def EBREAK: UInt = "b1001".U
-  def MRET  : UInt = "b1100".U
-  def SRET  : UInt = "b1101".U
-  def URET  : UInt = "b1111".U
-  def is_jmp(op: UInt) : Bool = op(3).asBool()
-  def is_ret(op: UInt) : Bool = op(2).asBool()
+  def RW    : UInt = "b00001".U
+  def RS    : UInt = "b00010".U
+  def RC    : UInt = "b00011".U
+  def RWI   : UInt = "b00101".U
+  def RSI   : UInt = "b00110".U
+  def RCI   : UInt = "b00111".U
+  def ECALL : UInt = "b10000".U
+  def EBREAK: UInt = "b10001".U
+  def MRET  : UInt = "b11000".U
+  def SRET  : UInt = "b11001".U
+  def URET  : UInt = "b11011".U
+  def is_jmp(op: UInt) : Bool = op(4).asBool()
+  def is_ret(op: UInt) : Bool = op(3).asBool()
+  def is_csri(op: UInt) : Bool = op(2).asBool()
 }
 
 private object CsrAddr {
@@ -101,7 +106,7 @@ trait CSRDefine {
   }
 
   // 参考XiangShan的实现
-  class MStatus extends Bundle {
+  class Status extends Bundle {
     val SD    : UInt = Output(UInt(1.W))
     val PAD0  : UInt = if (MXLEN == 64) Output(UInt((MXLEN - 37).W)) else null
     val SXL   : UInt = if (MXLEN == 64) Output(UInt(2.W)) else null
@@ -132,8 +137,8 @@ trait CSRDefine {
 
   // Machine Trap Setup
   // 0x300~0x306
-  val mstatus       : UInt = RegInit(0.U(CSR_DATA_W))
-  val misa          : UInt = RegInit(0.U(CSR_DATA_W))
+  val status        : Status = RegInit(0.U.asTypeOf(new Status))
+  val misa          : UInt = RegInit(MISA.U(CSR_DATA_W))
   val medeleg       : UInt = RegInit(0.U(CSR_DATA_W))
   val mideleg       : UInt = RegInit(0.U(CSR_DATA_W))
   val mie           : UInt = RegInit(0.U(CSR_DATA_W))
@@ -196,8 +201,18 @@ trait CSRDefine {
     CsrAddr.mhartid     ->  mhartid     ,
   )
 
+  val mstatus = WireInit(status)
+  mstatus.UXL := (if(supportUser)  (log2Ceil(UXLEN)-4).U else 0.U)
+  mstatus.SXL := (if(supportSupervisor) (log2Ceil(SXLEN)-4).U else 0.U)
+  mstatus.SPP := (if(!supportSupervisor) 0.U else status.SPP)
+  mstatus.MPP := (if(!supportUser) Privilege.Level.M else status.MPP)
+  mstatus.IE.U := (if(!supportUser) 0.U else status.IE.U)
+  mstatus.IE.S := (if(!supportSupervisor) 0.U else status.IE.S)
+  mstatus.PIE.U := (if(!supportUser) 0.U else status.PIE.U)
+  mstatus.PIE.S := (if(!supportSupervisor) 0.U else status.PIE.S)
+
   val readWriteMap = List (
-    CsrAddr.mstatus     ->  mstatus     ,
+    CsrAddr.mstatus     ->  mstatus.asUInt(),
     CsrAddr.misa        ->  misa        ,
     CsrAddr.medeleg     ->  medeleg     , // 异常委托寄存器，将m处理的异常委托给更低的特权级
     CsrAddr.mideleg     ->  mideleg     , // 中断委托寄存器，将m处理的中断委托给更低的特权级
@@ -245,11 +260,19 @@ class CSR extends Module with CSRDefine {
 
   private val rdata = MuxLookup(addr, 0.U(MXLEN.W), readOnlyMap++readWriteMap)
   private val wdata = MuxLookup(op, 0.U, Array(
-    CsrOp.RW -> io.in.src,
-    CsrOp.RS -> (rdata | io.in.src),
-    CsrOp.RC -> (rdata & (~io.in.src).asUInt())
+    CsrOp.RW  ->  io.in.src,
+    CsrOp.RWI ->  io.in.src,
+    CsrOp.RS  ->  (rdata | io.in.src),
+    CsrOp.RSI ->  (rdata | io.in.src),
+    CsrOp.RC  ->  (rdata & (~io.in.src).asUInt()),
+    CsrOp.RCI ->  (rdata & (~io.in.src).asUInt())
   ))
   mcycle := mcycle + 1.U
+  // todo: add inst_valid in io, minstret increase only when an instruction return.
+  private val inst_valid = true.B
+  when (inst_valid) {
+    minstret := minstret + 1.U
+  }
   private val is_mret = CsrOp.MRET === op
   private val is_sret = CsrOp.SRET === op
   private val is_uret = CsrOp.URET === op
@@ -262,6 +285,16 @@ class CSR extends Module with CSRDefine {
     new_pc := 0.U
     trap_valid := false.B
     switch(addr) {
+      is(CsrAddr.mstatus)    {
+        val mstatus_new = WireInit(wdata.asTypeOf(new Status))
+        // todo 分别把各特权级允许写的字段一一连线
+        if (supportUser) {
+          status.MPRV  :=  mstatus_new.MPRV
+          status.MPP   :=  legalizePrivilege(mstatus_new.MPP)
+        }
+        status.IE.M := mstatus_new.IE.M
+        status.PIE.M := mstatus_new.PIE.M
+      }
       is(CsrAddr.medeleg)   { medeleg   := wdata  }
       is(CsrAddr.mideleg)   { mideleg   := wdata  }
       is(CsrAddr.mie)       { mie       := wdata  }
@@ -296,24 +329,31 @@ class CSR extends Module with CSRDefine {
     when (op === CsrOp.ECALL) {
       when (currentPriv === mode_m) {
         mepc := pc
-        mcause := Exceptions.MECall.U
+        mcause := Traps.MECall.U
       }
-      val mstatus_old = WireInit(mstatus.asTypeOf(new MStatus))
-      val mstatus_new = WireInit(mstatus.asTypeOf(new MStatus))
-      mstatus_new.IE.M := false.B           // xIE设为0
-      mstatus_new.PIE.M := mstatus_old.IE.M // xPIE设为xIE的值
-      mstatus_new.MPP := currentPriv        // xPPi设为之前的特权级
-      mstatus := mstatus_new.asUInt         // 写回mstatus
+      status.IE.M := false.B
+      status.PIE.M := status.IE.M
+      status.MPP := currentPriv
+//      val mstatus_old = WireInit(mstatus.asTypeOf(new Status))
+//      val mstatus_new = WireInit(mstatus.asTypeOf(new Status))
+//      mstatus_new.IE.M := false.B           // xIE设为0
+//      mstatus_new.PIE.M := mstatus_old.IE.M // xPIE设为xIE的值
+//      mstatus_new.MPP := currentPriv        // xPPi设为之前的特权级
+//      status := mstatus_new.asUInt         // 写回mstatus
 
     }.elsewhen(is_mret) {
-      val mstatus_old = WireInit(mstatus.asTypeOf(new MStatus))
-      val mstatus_new = WireInit(mstatus.asTypeOf(new MStatus))
-      currentPriv := mstatus_old.MPP        // 特权模式修改为y模式
-      mstatus_new.PIE.M := true.B           // xPIE设为1
-      mstatus_new.IE.M := mstatus_old.PIE.M // xIE设为xPIE
-      // todo: 给CSR加上U模式，这里为了和NEMU的行为同步，MPP设定为mode_u
-      mstatus_new.MPP := mode_u             // xPP设置为U模式（不支持U模式，则是M模式）
-      mstatus := mstatus_new.asUInt
+//      val mstatus_old = WireInit(mstatus.asTypeOf(new Status))
+//      val mstatus_new = WireInit(mstatus.asTypeOf(new Status))
+//      currentPriv := mstatus_old.MPP        // 特权模式修改为y模式
+//      mstatus_new.PIE.M := true.B           // xPIE设为1
+//      mstatus_new.IE.M := mstatus_old.PIE.M // xIE设为xPIE
+//      mstatus_new.MPP := (if (supportUser) mode_u else mode_u)   // xPP设置为U模式（不支持U模式，则是M模式）
+//      mstatus := mstatus_new.asUInt
+      currentPriv := mstatus.MPP
+      status.PIE.M := true.B
+      status.IE.M := mstatus.PIE.M
+      // todo: 给CSR加上U模式，这里为了和NEMU的行为同步，即使不支持U模式，MPP也设定为mode_u
+      status.MPP := (if (supportUser) mode_u else mode_m)
     }
   }
   io.out.jmp.new_pc := new_pc
@@ -324,7 +364,7 @@ class CSR extends Module with CSRDefine {
   csrCommit.io.clock          := clock
   csrCommit.io.coreid         := 0.U
   csrCommit.io.priviledgeMode := currentPriv
-  csrCommit.io.mstatus        := mstatus
+  csrCommit.io.mstatus        := mstatus.asUInt()
   csrCommit.io.sstatus        := 0.U
   csrCommit.io.mepc           := mepc
   csrCommit.io.sepc           := 0.U
@@ -341,4 +381,10 @@ class CSR extends Module with CSRDefine {
   csrCommit.io.sscratch       := 0.U
   csrCommit.io.mideleg        := mideleg
   csrCommit.io.medeleg        := medeleg
+
+  def legalizePrivilege(priv: UInt): UInt =
+    if (supportUser)
+      Fill(2, priv(0))
+    else
+      Privilege.Level.M
 }

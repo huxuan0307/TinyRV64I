@@ -11,12 +11,6 @@ object BasicDefine {
   val ZERO32 : UInt = 0.U(32.W)
 }
 
-object ISAExt {
-  def apply(ch: Char) : UInt = {
-    (1 << (ch - 'A')).U(26.W)
-  }
-}
-
 trait HasInstType {
   protected val InstTypeSize = 7
   protected val InstN : UInt  = 0.U
@@ -53,6 +47,7 @@ trait HasRs1Type {
   protected def Rs1None : UInt = 0.U
   protected def Rs1Reg  : UInt = 1.U
   protected def Rs1PC   : UInt = 2.U
+  protected def Rs1UImm : UInt = 3.U
   protected val Rs1TypeWidth: Width = log2Up(Rs1TypeSize).W
 }
 
@@ -69,3 +64,4 @@ trait HasMemDataType {
   val type_b :: type_h :: type_w :: type_d :: Nil = Enum(MemDataTypeSize)
   protected val MemDataTypeWidth: Width = log2Up(MemDataTypeSize).W
 }
+

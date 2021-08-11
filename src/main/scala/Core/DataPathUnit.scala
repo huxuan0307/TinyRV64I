@@ -26,11 +26,12 @@ class DataPathUnit extends Module with HasRs1Type with HasRs2Type with CoreConfi
 
   io.to_exu.op_num1   := MuxLookup(io.from_idu.rs1Type, 0.U, List(
     Rs1Reg -> rs1Data,
-    Rs1PC  -> io.from_idu.pc
+    Rs1PC  -> io.from_idu.pc,
+    Rs1UImm-> io.from_idu.uimm_ext
   ))
   io.to_exu.op_num2   := MuxLookup(io.from_idu.rs2Type, 0.U, List(
     Rs2Reg -> rs2Data,
-    Rs2Imm -> io.from_idu.rs2_data
+    Rs2Imm -> io.from_idu.imm_ext
   ))
   io.to_exu.op_type   := io.from_idu.opType
   io.to_exu.func_type := io.from_idu.funcType

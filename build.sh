@@ -230,7 +230,7 @@ if [[ $RUNALL == "true" ]]; then
     rm -f *.bin
     create_soft_link $OSCPU_PATH/$DIFF_BUILD_FOLDER $BIN_SOURCE_PATH \"*.bin\"
     create_soft_link $OSCPU_PATH/$DIFF_BUILD_FOLDER $BIN_SOURCE_PATH_MICROBENCH \"*.bin\"
-#    create_soft_link $OSCPU_PATH/$DIFF_BUILD_FOLDER $OSCPU_PATH/$BIN_SOURCE_PATH_RISCVTESTS \"*.bin\"
+    create_soft_link $OSCPU_PATH/$DIFF_BUILD_FOLDER $OSCPU_PATH/$BIN_SOURCE_PATH_RISCVTESTS \"*.bin\"
 
     mkdir log 1>/dev/null 2>&1
     BIN_FILES=`ls *.bin`

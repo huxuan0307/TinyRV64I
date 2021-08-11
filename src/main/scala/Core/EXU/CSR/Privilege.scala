@@ -1,8 +1,7 @@
 package Core.EXU.CSR
 
 import chisel3._
-
-import scala.language.postfixOps
+import Core.CoreConfig._
 
 object Privilege {
   object Level {
@@ -23,4 +22,9 @@ object Privilege {
     /** Write Any Values, Reads Legal Values */
     def WARL : UInt = "b11".U(2.W)
   }
+  def supportUser : Boolean = ISAEXT.support('U')
+  def supportSupervisor : Boolean = ISAEXT.support('S')
+
 }
+
+

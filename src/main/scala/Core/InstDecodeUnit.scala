@@ -1,6 +1,7 @@
 package Core
 
 import Core.Decode._
+import Core.EXU.CSR.CsrOp
 import chisel3._
 import chisel3.util._
 
@@ -11,16 +12,19 @@ class InstDecodeUnitIO extends Bundle {
   val is_trap : Bool = Output(Bool())
 }
 
-class InstDecodeUnit extends Module with HasRs1Type with HasRs2Type with CoreConfig with HasInstType {
+class InstDecodeUnit extends Module with HasRs1Type with HasRs2Type with CoreConfig with HasInstType with HasFuncType {
   val io: InstDecodeUnitIO = IO(new InstDecodeUnitIO)
   protected val inst : UInt = io.in.inst
   protected val rs1Reg : UInt = inst(19, 15)
   protected val rs2Reg : UInt = inst(24, 20)
   protected val rdReg : UInt = inst(11, 7)
-  protected val instType :: funcType :: opType :: rdEna :: Nil
+  protected val uimm : UInt = inst(19, 15)
+  protected val instType :: funcType :: opType :: rdEna :: rs1Type :: rs2Type :: Nil
     = ListLookup(inst, DecodeDefault, DecodeTable)
-  io.out.rs1Type := MuxLookup(instType, Rs1None, RsTypeTable.map(p => (p._1, p._2._1)))
-  io.out.rs2Type := MuxLookup(instType, Rs2None, RsTypeTable.map(p => (p._1, p._2._2)))
+  io.out.rs1Type := rs1Type
+  io.out.rs2Type := rs2Type
+//  io.out.rs1Type := MuxLookup(instType, Rs1None, RsTypeTable.map(p => (p._1, p._2._1)))
+//  io.out.rs2Type := MuxLookup(instType, Rs2None, RsTypeTable.map(p => (p._1, p._2._2)))
   io.out.funcType := funcType
   io.out.opType   := opType
   io.out.rs1Addr   := rs1Reg
@@ -29,8 +33,8 @@ class InstDecodeUnit extends Module with HasRs1Type with HasRs2Type with CoreCon
   io.out.rdAddr    := rdReg
 
   // data
-  io.out.rs1_data      := DontCare
-  io.out.rs2_data      := MuxLookup(instType, 0.U, List(
+  io.out.uimm_ext     := Mux(CsrOp.is_csri(opType), zext(XLEN, uimm), 0.U)
+  io.out.imm_ext      := MuxLookup(instType, 0.U, List(
     InstU -> sext(XLEN, Cat(inst(31, 12), 0.U(12.W))),
     InstJ -> sext(XLEN, Cat(inst(31), inst(19,12), inst(20), inst(30,21), 0.U(1.W))),
     InstB -> sext(XLEN, Cat(inst(31), inst(7), inst(30,25), inst(11,8), 0.U(1.W))),
